@@ -90,8 +90,22 @@ export default function JoinDirectoryModal({ open, onClose, initialProfile, onSu
       }
       // Strip id before insert/update
       const { id, ...safeForm } = form;
-      // Get authenticated user
-      const { data: { user } } = await supabase.auth.getUser();
+      // Always use magic link sign-in for new users
+      if (!session) {
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+          email: form.email || '',
+          options: {
+            emailRedirectTo: process.env.NODE_ENV === 'production'
+              ? 'https://dukedsp.com/auth/callback'
+              : `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (otpError) throw otpError;
+        setLoading(false);
+        setError('Check your email for a magic link to sign in.');
+        return;
+      }
+      const user = session.user;
       if (!user) throw new Error('User not authenticated');
       let error;
       if (initialProfile) {
