@@ -139,70 +139,70 @@ export default function JoinDirectoryModal({ open, onClose, initialProfile, onSu
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-2"
       aria-modal="true"
       role="dialog"
       tabIndex={-1}
     >
-      <form onSubmit={handleSubmit} className="relative bg-white max-w-lg w-full rounded-lg shadow-xl p-8 overflow-y-auto max-h-[90vh]">
+      <form onSubmit={handleSubmit} className="relative bg-white max-w-lg w-full rounded-lg shadow-xl p-4 sm:p-6 md:p-8 overflow-y-auto max-h-[90vh] space-y-4 sm:space-y-6">
         <button
           onClick={onClose}
           type="button"
           aria-label="Close"
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+          className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h2 className="text-xl font-bold text-gray-900 mb-6">{initialProfile ? 'Edit Your Profile' : 'Join the Directory'}</h2>
-        <div className="space-y-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">{initialProfile ? 'Edit Your Profile' : 'Join the Directory'}</h2>
+        <div className="space-y-4 sm:space-y-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-              <input name="name" value={form.name || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
+              <input name="name" value={form.name || ''} onChange={handleChange} required className="w-full min-h-[44px] px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-base sm:text-sm text-black bg-white placeholder-gray-500" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-              <input name="email" type="email" value={form.email || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
+              <input name="email" type="email" value={form.email || ''} onChange={handleChange} required className="w-full min-h-[44px] px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-base sm:text-sm text-black bg-white placeholder-gray-500" />
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Pledge Class *</label>
-              <input name="pledgeClass" value={form.pledgeClass || ''} onChange={handleChange} required placeholder="Fall '24" className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
+              <input name="pledgeClass" value={form.pledgeClass || ''} onChange={handleChange} required placeholder="Fall '24" className="w-full min-h-[44px] px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-base sm:text-sm text-black bg-white placeholder-gray-500" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Major *</label>
-              <input name="major" value={form.major || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
+              <input name="major" value={form.major || ''} onChange={handleChange} required className="w-full min-h-[44px] px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-base sm:text-sm text-black bg-white placeholder-gray-500" />
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Location (State or Country) *</label>
-              <input name="location" value={form.location || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
+              <input name="location" value={form.location || ''} onChange={handleChange} required className="w-full min-h-[44px] px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-base sm:text-sm text-black bg-white placeholder-gray-500" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Graduation Year</label>
-              <input name="graduationYear" value={form.graduationYear || ''} onChange={handleChange} placeholder="2024" className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
+              <input name="graduationYear" value={form.graduationYear || ''} onChange={handleChange} placeholder="2024" className="w-full min-h-[44px] px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-base sm:text-sm text-black bg-white placeholder-gray-500" />
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
-              <input name="linkedinUrl" value={form.linkedinUrl || ''} onChange={handleChange} placeholder="https://linkedin.com/in/yourprofile" className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
+              <input name="linkedinUrl" value={form.linkedinUrl || ''} onChange={handleChange} placeholder="https://linkedin.com/in/yourprofile" className="w-full min-h-[44px] px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-base sm:text-sm text-black bg-white placeholder-gray-500" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Profile Picture</label>
-              <input name="profilePic" type="file" accept="image/*" onChange={handleFileChange} className="w-full h-10 text-sm text-black bg-white placeholder-gray-500" />
+              <input name="profilePic" type="file" accept="image/*" onChange={handleFileChange} className="w-full min-h-[44px] text-base sm:text-sm text-black bg-white placeholder-gray-500" />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-            <textarea name="bio" value={form.bio || ''} onChange={handleChange} rows={3} className="w-full px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
+            <textarea name="bio" value={form.bio || ''} onChange={handleChange} rows={3} className="w-full min-h-[44px] px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-base sm:text-sm text-black bg-white placeholder-gray-500" />
           </div>
           {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
-          <button type="submit" disabled={loading} className="w-full h-10 bg-[#012169] text-white rounded-md font-semibold hover:bg-indigo-800 transition disabled:opacity-60 mt-2">
+          <button type="submit" disabled={loading} className="w-full min-h-[44px] text-base sm:text-sm bg-[#012169] text-white rounded-md font-semibold hover:bg-indigo-800 transition disabled:opacity-60 mt-2">
             {loading ? 'Submitting…' : initialProfile ? 'Save Changes' : 'Join Directory'}
           </button>
         </div>

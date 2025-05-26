@@ -629,34 +629,32 @@ export default function JoinFlow({ onComplete, onClose, initialProfile }: JoinFl
         return (
           <div>
             <label className="block text-lg font-medium mb-2 text-blue-900">
-              What industries or spheres are you in? (Select all that apply) <span className="text-red-500">*</span>
+              {prompts.sphere} <span className="text-red-500">*</span>
             </label>
-            <div className="flex w-full justify-center gap-x-4 mb-2 flex-nowrap">
-              {sphereOptions.map((option) => {
-                const selected = form.spheres.includes(option);
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => {
-                      if (selected) {
-                        setForm((f) => ({ ...f, spheres: f.spheres.filter((s) => s !== option) }));
-                      } else {
-                        setForm((f) => ({ ...f, spheres: [...f.spheres, option] }));
-                      }
-                    }}
-                    className={cn(
-                      'flex-1 min-w-0 px-0 py-2 rounded-full border font-semibold transition text-center',
-                      selected
-                        ? 'bg-blue-900 text-white border-blue-900 shadow'
-                        : 'bg-white text-blue-900 border-blue-200 hover:bg-blue-50'
-                    )}
-                    style={{ maxWidth: '120px' }}
-                  >
-                    {option}
-                  </button>
-                );
-              })}
+            <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-2">
+              {sphereOptions.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className={cn(
+                    'w-full px-4 py-2 rounded-lg border-2 text-base font-semibold',
+                    form.spheres.includes(s)
+                      ? 'bg-blue-900 text-white border-blue-900'
+                      : 'bg-white text-blue-900 border-blue-200',
+                    'transition focus:outline-none focus:ring-2 focus:ring-blue-900'
+                  )}
+                  onClick={() => {
+                    setForm((f) => ({
+                      ...f,
+                      spheres: f.spheres.includes(s)
+                        ? f.spheres.filter((x) => x !== s)
+                        : [...f.spheres, s],
+                    }));
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
             </div>
             {errors.sphere && <p className="text-red-500 mt-2">{errors.sphere}</p>}
           </div>
