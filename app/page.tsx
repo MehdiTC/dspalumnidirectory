@@ -182,6 +182,7 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const [joinFlowOpen, setJoinFlowOpen] = useState(false);
   const [editProfile, setEditProfile] = useState<Profile | null>(null);
+  const [pendingEditProfile, setPendingEditProfile] = useState<Profile | null>(null);
 
   // Directory data
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -279,6 +280,14 @@ export default function Home() {
     if (!user) return null;
     return profiles.find((p) => p.user_id === user.id) || null;
   }, [profiles, user]);
+
+  // Open edit profile flow after modal closes
+  useEffect(() => {
+    if (!modalOpen && pendingEditProfile) {
+      setEditProfile(pendingEditProfile);
+      setPendingEditProfile(null);
+    }
+  }, [modalOpen, pendingEditProfile]);
 
   return (
     <main className="min-h-screen bg-white">
@@ -480,8 +489,8 @@ export default function Home() {
                       className="absolute bottom-3 right-3 px-2 py-1 text-xs font-semibold border border-[#012169] text-[#012169] bg-white rounded hover:bg-[#012169]/10 transition z-10"
                       onClick={e => {
                         e.stopPropagation();
+                        setPendingEditProfile(member);
                         setModalOpen(false);
-                        setTimeout(() => setEditProfile(member), 0);
                       }}
                     >
                       Edit Profile
