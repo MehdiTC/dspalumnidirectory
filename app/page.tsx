@@ -284,8 +284,11 @@ export default function Home() {
   // Open edit profile flow after modal closes
   useEffect(() => {
     if (!modalOpen && pendingEditProfile) {
-      setEditProfile(pendingEditProfile);
-      setPendingEditProfile(null);
+      const timer = setTimeout(() => {
+        setEditProfile(pendingEditProfile);
+        setPendingEditProfile(null);
+      }, 300);
+      return () => clearTimeout(timer);
     }
   }, [modalOpen, pendingEditProfile]);
 
