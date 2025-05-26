@@ -28,6 +28,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/', requestUrl.origin));
   } catch (error) {
     console.error('Callback error:', error);
+    const requestUrl = new URL(request.url);
     return NextResponse.redirect(new URL('/login?error=An unexpected error occurred', requestUrl.origin));
   }
 } 
