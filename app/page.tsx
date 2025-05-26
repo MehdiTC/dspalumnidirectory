@@ -480,7 +480,8 @@ export default function Home() {
                       className="absolute bottom-3 right-3 px-2 py-1 text-xs font-semibold border border-[#012169] text-[#012169] bg-white rounded hover:bg-[#012169]/10 transition z-10"
                       onClick={e => {
                         e.stopPropagation();
-                        setEditProfile(member);
+                        setModalOpen(false);
+                        setTimeout(() => setEditProfile(member), 0);
                       }}
                     >
                       Edit Profile
