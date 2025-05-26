@@ -511,7 +511,7 @@ export default function Home() {
         </div>
       </section>
       {/* Edit Profile Modal */}
-      {editProfile && (
+      {!modalOpen && editProfile && (
         <JoinFlow
           onComplete={() => {
             setEditProfile(null);
