@@ -31,6 +31,7 @@ export default function LoginPage() {
           emailRedirectTo: process.env.NODE_ENV === 'production' 
             ? 'https://dukedsp.com/auth/callback'
             : `${window.location.origin}/auth/callback`,
+          shouldCreateUser: true,
         },
       });
 
