@@ -160,46 +160,46 @@ export default function JoinDirectoryModal({ open, onClose, initialProfile, onSu
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-              <input name="name" value={form.name || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm" />
+              <input name="name" value={form.name || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-              <input name="email" type="email" value={form.email || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm" />
+              <input name="email" type="email" value={form.email || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Pledge Class *</label>
-              <input name="pledgeClass" value={form.pledgeClass || ''} onChange={handleChange} required placeholder="Fall '24" className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm" />
+              <input name="pledgeClass" value={form.pledgeClass || ''} onChange={handleChange} required placeholder="Fall '24" className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Major *</label>
-              <input name="major" value={form.major || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm" />
+              <input name="major" value={form.major || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Location (State or Country) *</label>
-              <input name="location" value={form.location || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm" />
+              <input name="location" value={form.location || ''} onChange={handleChange} required className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Graduation Year</label>
-              <input name="graduationYear" value={form.graduationYear || ''} onChange={handleChange} placeholder="2024" className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm" />
+              <input name="graduationYear" value={form.graduationYear || ''} onChange={handleChange} placeholder="2024" className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
-              <input name="linkedinUrl" value={form.linkedinUrl || ''} onChange={handleChange} placeholder="https://linkedin.com/in/yourprofile" className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm" />
+              <input name="linkedinUrl" value={form.linkedinUrl || ''} onChange={handleChange} placeholder="https://linkedin.com/in/yourprofile" className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Profile Picture</label>
-              <input name="profilePic" type="file" accept="image/*" onChange={handleFileChange} className="w-full h-10 text-sm" />
+              <input name="profilePic" type="file" accept="image/*" onChange={handleFileChange} className="w-full h-10 text-sm text-black bg-white placeholder-gray-500" />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-            <textarea name="bio" value={form.bio || ''} onChange={handleChange} rows={3} className="w-full px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm" />
+            <textarea name="bio" value={form.bio || ''} onChange={handleChange} rows={3} className="w-full px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#012169] text-sm text-black bg-white placeholder-gray-500" />
           </div>
           {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
           <button type="submit" disabled={loading} className="w-full h-10 bg-[#012169] text-white rounded-md font-semibold hover:bg-indigo-800 transition disabled:opacity-60 mt-2">
