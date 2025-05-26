@@ -354,8 +354,19 @@ export default function JoinFlow({ onComplete, onClose, initialProfile }: JoinFl
         throw sessionError;
       }
       if (!session?.user) {
-        console.error('No session or user found');
-        throw new Error('No authenticated user found. Please try logging in again.');
+        // Not authenticated: send magic link
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+          email: form.email,
+          options: {
+            emailRedirectTo: process.env.NODE_ENV === 'production'
+              ? 'https://dukedsp.com/auth/callback'
+              : `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (otpError) throw otpError;
+        setSubmitting(false);
+        setErrors({ submit: 'Check your email for a magic link to sign in.' });
+        return;
       }
 
       console.log('Current user:', session.user.id);
