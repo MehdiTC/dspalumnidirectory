@@ -1,5 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSession } from '@supabase/auth-helpers-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiEdit2 } from 'react-icons/fi';
+import { FaCamera } from 'react-icons/fa';
+import Cropper from 'react-easy-crop';
+import { getCroppedImg } from '@/lib/cropImage';
+import { cn } from '@/lib/utils';
 
 export type Profile = {
   id?: string;
@@ -26,43 +32,111 @@ type ProfileModalProps = {
   onEdit: () => void;
 };
 
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase();
-}
+const sphereOptions = ['Finance', 'Consulting', 'Tech', 'Other'];
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onEdit }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState<Profile | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [profilePic, setProfilePic] = useState<File | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const session = useSession();
-  const isOwner = session?.user?.id && profile?.user_id && session.user.id === profile.user_id;
+  const isOwner = session?.user?.id === profile?.user_id;
 
   useEffect(() => {
-    if (!open) return;
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+    if (profile) {
+      setEditedProfile(profile);
     }
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [open, onClose]);
+  }, [profile]);
 
-  // Listen for edit profile event
-  useEffect(() => {
-    const handleCloseModal = () => {
-      onClose();
-    };
-    window.addEventListener('closeProfileModal', handleCloseModal);
-    return () => window.removeEventListener('closeProfileModal', handleCloseModal);
-  }, [onClose]);
-
-  // Close on outside click
   function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === overlayRef.current) onClose();
   }
 
-  if (!open || !profile) return null;
+  function getInitials(name: string) {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    const { name, value } = e.target;
+    setEditedProfile(prev => {
+      if (!prev) return null;
+      const newProfile = { ...prev, [name]: value };
+      setHasChanges(true);
+      return newProfile;
+    });
+  }
+
+  function handleSphereChange(sphere: string) {
+    setEditedProfile(prev => {
+      if (!prev) return null;
+      const newSpheres = prev.sphere?.includes(sphere)
+        ? prev.sphere.filter(s => s !== sphere)
+        : [...(prev.sphere || []), sphere];
+      setHasChanges(true);
+      return { ...prev, sphere: newSpheres };
+    });
+  }
+
+  function handlePledgeClassChange(semester: string, year: string) {
+    setEditedProfile(prev => {
+      if (!prev) return null;
+      setHasChanges(true);
+      return { ...prev, pledgeClass: `${semester} '${year}` };
+    });
+  }
+
+  function handleProfilePic(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('File must be an image');
+      return;
+    }
+    setProfilePic(file);
+    setShowCropper(true);
+  }
+
+  async function handleCropComplete(_: any, croppedAreaPixels: any) {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }
+
+  async function handleCropSave() {
+    if (!profilePic || !croppedAreaPixels) return;
+    const cropped = await getCroppedImg(profilePic, croppedAreaPixels);
+    setEditedProfile(prev => {
+      if (!prev) return null;
+      setHasChanges(true);
+      return { ...prev, profile_picture_url: cropped };
+    });
+    setShowCropper(false);
+  }
+
+  async function handleSave() {
+    // TODO: Implement save functionality
+    setIsEditing(false);
+    setHasChanges(false);
+  }
+
+  function handleCancel() {
+    setEditedProfile(profile);
+    setIsEditing(false);
+    setHasChanges(false);
+  }
+
+  if (!profile || !editedProfile) return null;
+
+  const [pledgeSemester, pledgeYear] = profile.pledgeClass.split(" '");
 
   return (
     <div
@@ -73,7 +147,12 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
       role="dialog"
       tabIndex={-1}
     >
-      <div className="relative bg-white max-w-2xl w-full rounded-lg shadow-xl p-10 overflow-y-auto max-h-[90vh]">
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="relative bg-white max-w-2xl w-full rounded-lg shadow-xl p-10 overflow-y-auto max-h-[90vh]"
+      >
         <button
           onClick={onClose}
           aria-label="Close"
@@ -84,104 +163,335 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
           </svg>
         </button>
         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-          {/* Profile Picture */}
+          {/* Profile Picture Section */}
           <div className="flex-shrink-0 flex flex-col items-center gap-4">
-            {profile.profile_picture_url ? (
-              <img
-                src={profile.profile_picture_url}
-                alt={profile.name}
-                className="w-32 h-32 rounded-full object-cover border-4 border-[#012169] shadow"
-              />
-            ) : (
-              <div className="w-32 h-32 rounded-full bg-[#012169] flex items-center justify-center text-white text-4xl font-bold shadow">
-                {getInitials(profile.name)}
+            <div className="relative group">
+              {editedProfile.profile_picture_url ? (
+                <img
+                  src={editedProfile.profile_picture_url}
+                  alt={editedProfile.name}
+                  className="w-32 h-32 rounded-full object-cover border-4 border-[#012169] shadow"
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-[#012169] flex items-center justify-center text-white text-4xl font-bold shadow">
+                  {getInitials(editedProfile.name)}
+                </div>
+              )}
+              {isEditing && (
+                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-white hover:text-blue-200 transition-colors"
+                  >
+                    <FaCamera size={24} />
+                  </button>
+                </div>
+              )}
+            </div>
+            {isEditing && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-sm text-blue-900 hover:text-blue-700"
+                >
+                  Change Photo
+                </button>
+                {editedProfile.profile_picture_url && (
+                  <button
+                    onClick={() => setShowCropper(true)}
+                    className="text-sm text-blue-900 hover:text-blue-700"
+                  >
+                    Edit Crop
+                  </button>
+                )}
               </div>
             )}
-            {isOwner && (
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleProfilePic}
+            />
+            {isOwner && !isEditing && (
               <button
-                onClick={onEdit}
+                onClick={() => setIsEditing(true)}
                 className="px-4 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition"
               >
                 Edit Profile
               </button>
             )}
           </div>
+
           {/* Main Info */}
-          <div className="flex-1 min-w-0 w-full">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-x-3 mb-1">
-                  <h2 className="text-3xl font-bold text-gray-900 leading-tight break-words flex-1 min-w-0">{profile.name}</h2>
-                  {profile.linkedinUrl && (
-                    <a
-                      href={profile.linkedinUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#012169] hover:text-indigo-700 flex items-center justify-center ml-1"
-                      aria-label="LinkedIn profile"
-                    >
-                      <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                      </svg>
-                    </a>
-                  )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start gap-2">
+              {isEditing ? (
+                <input
+                  name="name"
+                  value={editedProfile.name}
+                  onChange={handleInputChange}
+                  className="text-2xl font-bold text-blue-900 border-b-2 border-blue-200 focus:border-blue-900 focus:outline-none"
+                />
+              ) : (
+                <h2 className="text-2xl font-bold text-blue-900">{editedProfile.name}</h2>
+              )}
+              {isEditing && (
+                <button className="text-gray-400 hover:text-blue-900">
+                  <FiEdit2 size={16} />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-start gap-2 mt-1">
+              {isEditing ? (
+                <div className="flex gap-2">
+                  <input
+                    name="role"
+                    value={editedProfile.role}
+                    onChange={handleInputChange}
+                    placeholder="Role"
+                    className="text-gray-700 border-b-2 border-blue-200 focus:border-blue-900 focus:outline-none"
+                  />
+                  <span className="text-gray-700">@</span>
+                  <input
+                    name="company"
+                    value={editedProfile.company}
+                    onChange={handleInputChange}
+                    placeholder="Company"
+                    className="text-gray-700 border-b-2 border-blue-200 focus:border-blue-900 focus:outline-none"
+                  />
                 </div>
-              </div>
-            </div>
-            <div className="text-gray-600 text-base font-semibold mb-1">
-              {profile.role}
-              {profile.company && (
-                <span> @ {profile.company}</span>
+              ) : (
+                <div className="text-gray-700">
+                  {editedProfile.role}
+                  {editedProfile.role && editedProfile.company ? ' @ ' : ''}
+                  {editedProfile.company}
+                </div>
+              )}
+              {isEditing && (
+                <button className="text-gray-400 hover:text-blue-900">
+                  <FiEdit2 size={16} />
+                </button>
               )}
             </div>
+
             <div className="text-gray-500 text-sm mb-1">
-              {profile.graduationYear && (
-                <span>Class of {profile.graduationYear}</span>
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <select
+                    value={pledgeSemester}
+                    onChange={(e) => handlePledgeClassChange(e.target.value, pledgeYear)}
+                    className="border-b-2 border-blue-200 focus:border-blue-900 focus:outline-none"
+                  >
+                    <option value="Fall">Fall</option>
+                    <option value="Spring">Spring</option>
+                  </select>
+                  <span>'</span>
+                  <input
+                    type="text"
+                    value={pledgeYear}
+                    onChange={(e) => handlePledgeClassChange(pledgeSemester, e.target.value)}
+                    maxLength={2}
+                    className="w-8 border-b-2 border-blue-200 focus:border-blue-900 focus:outline-none"
+                  />
+                </div>
+              ) : (
+                <>
+                  {editedProfile.graduationYear && (
+                    <span>Class of {editedProfile.graduationYear}</span>
+                  )}
+                  {editedProfile.graduationYear && editedProfile.pledgeClass && <span> • </span>}
+                  {editedProfile.pledgeClass && <span>{editedProfile.pledgeClass}</span>}
+                </>
               )}
-              {profile.graduationYear && profile.pledgeClass && <span> • </span>}
-              {profile.pledgeClass && <span>{profile.pledgeClass} </span>}
             </div>
-            {profile.location && (
-              <div className="text-gray-500 text-sm mb-4">{profile.location}</div>
+
+            {editedProfile.location && (
+              <div className="flex items-start gap-2">
+                {isEditing ? (
+                  <input
+                    name="location"
+                    value={editedProfile.location}
+                    onChange={handleInputChange}
+                    className="text-gray-500 text-sm border-b-2 border-blue-200 focus:border-blue-900 focus:outline-none"
+                  />
+                ) : (
+                  <div className="text-gray-500 text-sm">{editedProfile.location}</div>
+                )}
+                {isEditing && (
+                  <button className="text-gray-400 hover:text-blue-900">
+                    <FiEdit2 size={14} />
+                  </button>
+                )}
+              </div>
             )}
+
             {/* Academic Section */}
-            {(profile.major || profile.minor) && (
-              <div className="mb-4 space-y-1">
-                {profile.major && (
+            <div className="mt-4 space-y-1">
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold w-20">Major:</span>
+                  <input
+                    name="major"
+                    value={editedProfile.major || ''}
+                    onChange={handleInputChange}
+                    className="flex-1 border-b-2 border-blue-200 focus:border-blue-900 focus:outline-none"
+                  />
+                </div>
+              ) : (
+                editedProfile.major && (
                   <div className="flex items-center text-gray-700 text-sm">
                     <span className="font-semibold w-20">Major:</span>
-                    <span className="truncate">{profile.major}</span>
+                    <span className="truncate">{editedProfile.major}</span>
                   </div>
-                )}
-                {profile.minor && (
-                  <div className="flex items-center text-gray-700 text-sm">
-                    <span className="font-semibold w-20">Minor:</span>
-                    <span className="truncate">{profile.minor}</span>
+                )
+              )}
+
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold w-20">Spheres:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {sphereOptions.map((sphere) => (
+                      <button
+                        key={sphere}
+                        onClick={() => handleSphereChange(sphere)}
+                        className={cn(
+                          'px-2 py-1 rounded text-sm',
+                          editedProfile.sphere?.includes(sphere)
+                            ? 'bg-blue-900 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        )}
+                      >
+                        {sphere}
+                      </button>
+                    ))}
                   </div>
-                )}
-                {profile.sphere && profile.sphere.length > 0 && (
+                </div>
+              ) : (
+                editedProfile.sphere && editedProfile.sphere.length > 0 && (
                   <div className="flex items-center text-gray-700 text-sm">
                     <span className="font-semibold w-20">Spheres:</span>
-                    <span className="truncate text-[#012169] font-medium">{profile.sphere.join(', ')}</span>
+                    <span className="truncate text-[#012169] font-medium">
+                      {editedProfile.sphere.join(', ')}
+                    </span>
+                  </div>
+                )
+              )}
+
+              <div className="flex items-start gap-2">
+                {isEditing ? (
+                  <input
+                    name="email"
+                    value={editedProfile.email}
+                    onChange={handleInputChange}
+                    className="flex-1 border-b-2 border-blue-200 focus:border-blue-900 focus:outline-none"
+                  />
+                ) : (
+                  <a href={`mailto:${editedProfile.email}`} className="truncate underline hover:text-indigo-700 break-all">
+                    {editedProfile.email}
+                  </a>
+                )}
+                {isEditing && (
+                  <button className="text-gray-400 hover:text-blue-900">
+                    <FiEdit2 size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Bio Section */}
+            <div className="mt-6 relative">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-900 rounded-full"></div>
+              <div className="pl-4">
+                {isEditing ? (
+                  <textarea
+                    name="bio"
+                    value={editedProfile.bio || ''}
+                    onChange={handleInputChange}
+                    className="w-full bg-gray-50 italic text-gray-700 border-2 border-blue-200 focus:border-blue-900 focus:outline-none rounded p-2"
+                    rows={4}
+                    maxLength={300}
+                  />
+                ) : (
+                  <div className="bg-gray-50 italic text-gray-700 p-4 rounded">
+                    {editedProfile.bio || 'No bio provided'}
                   </div>
                 )}
-                <div className="flex items-center text-gray-700 text-sm">
-                  <span className="font-semibold w-20">Email:</span>
-                  <a href={`mailto:${profile.email}`} className="truncate underline hover:text-indigo-700 break-all">{profile.email}</a>
-                </div>
               </div>
-            )}
-            {/* Divider */}
-            <div className="border-t border-gray-200 my-6" />
-            {/* Bio Block */}
-            {profile.bio && (
-              <blockquote className="italic text-gray-700 text-base leading-relaxed border-l-4 border-[#012169] pl-4 bg-gray-50 py-4">
-                {profile.bio}
-              </blockquote>
+            </div>
+
+            {/* Save/Cancel Buttons */}
+            {isEditing && hasChanges && (
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  onClick={handleCancel}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-4 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition"
+                >
+                  Save Changes
+                </button>
+              </div>
             )}
           </div>
         </div>
-      </div>
+
+        {/* Image Cropper Modal */}
+        <AnimatePresence>
+          {showCropper && profilePic && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+            >
+              <div className="bg-white rounded-xl p-6 shadow-lg flex flex-col items-center gap-4">
+                <div className="relative w-64 h-64 bg-gray-100 rounded-lg overflow-hidden">
+                  <Cropper
+                    image={URL.createObjectURL(profilePic)}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={1}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={handleCropComplete}
+                    showGrid={true}
+                    cropShape="round"
+                  />
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.01}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-48"
+                />
+                <div className="flex gap-4">
+                  <button
+                    className="px-4 py-2 bg-[#012169] text-white rounded-lg"
+                    onClick={handleCropSave}
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg"
+                    onClick={() => setShowCropper(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 };
