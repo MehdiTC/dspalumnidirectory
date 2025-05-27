@@ -185,35 +185,19 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                   {getInitials(editedProfile.name)}
                 </div>
               )}
-              {isEditing && (
-                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-white hover:text-blue-200 transition-colors"
-                  >
-                    <FaCamera size={24} />
-                  </button>
-                </div>
-              )}
             </div>
-            {isEditing && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-sm text-blue-900 hover:text-blue-700"
-                >
-                  Change Photo
-                </button>
-                {editedProfile.profile_picture_url && (
-                  <button
-                    onClick={() => setShowCropper(true)}
-                    className="text-sm text-blue-900 hover:text-blue-700"
-                  >
-                    Edit Crop
-                  </button>
-                )}
-              </div>
-            )}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-36 py-2 bg-[#012169] text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition text-lg mt-2"
+            >
+              Change Photo
+            </button>
+            <button
+              onClick={() => setShowCropper(true)}
+              className="w-36 py-2 border-2 border-[#012169] text-[#012169] rounded-lg font-semibold hover:bg-blue-50 transition text-lg"
+            >
+              Edit Crop
+            </button>
             <input
               type="file"
               accept="image/*"
@@ -221,145 +205,132 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
               ref={fileInputRef}
               onChange={handleProfilePic}
             />
-            {isOwner && !isEditing && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition"
-              >
-                Edit Profile
-              </button>
-            )}
           </div>
-
           {/* Main Info */}
           <div className="flex-1 min-w-0">
             {/* Name */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center border-b-2 border-[#012169] mb-2">
               {editingField === 'name' ? (
                 <input
                   name="name"
                   value={editedProfile.name}
                   onChange={handleInputChange}
                   onBlur={stopEdit}
-                  className="text-2xl font-bold text-blue-900 border-b-2 border-blue-700 focus:outline-none w-full"
+                  className="flex-1 text-2xl font-bold text-blue-900 bg-transparent focus:outline-none"
                   autoFocus
                 />
               ) : (
-                <>
-                  <h2 className="text-2xl font-bold text-blue-900 flex-1">{editedProfile.name}</h2>
-                  <button onClick={() => startEdit('name')} className="ml-2 text-blue-700"><FiEdit2 /></button>
-                </>
+                <span className="flex-1 text-2xl font-bold text-blue-900">{editedProfile.name}</span>
               )}
+              <button onClick={() => startEdit('name')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
             </div>
             {/* Role & Company */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center border-b-2 border-[#012169] mb-2">
               {editingField === 'role' ? (
                 <input
                   name="role"
                   value={editedProfile.role}
                   onChange={handleInputChange}
                   onBlur={stopEdit}
-                  className="border-b-2 border-blue-700 focus:outline-none w-32"
+                  className="flex-1 bg-transparent focus:outline-none"
                   autoFocus
                 />
               ) : (
-                <span>{editedProfile.role}</span>
+                <span className="flex-1">{editedProfile.role}</span>
               )}
-              <span>@</span>
+              <span className="mx-2">@</span>
               {editingField === 'company' ? (
                 <input
                   name="company"
                   value={editedProfile.company}
                   onChange={handleInputChange}
                   onBlur={stopEdit}
-                  className="border-b-2 border-blue-700 focus:outline-none w-32"
+                  className="flex-1 bg-transparent focus:outline-none"
                   autoFocus
                 />
               ) : (
-                <span>{editedProfile.company}</span>
+                <span className="flex-1">{editedProfile.company}</span>
               )}
-              <button onClick={() => startEdit('role')} className="ml-2 text-blue-700"><FiEdit2 /></button>
-              <button onClick={() => startEdit('company')} className="ml-2 text-blue-700"><FiEdit2 /></button>
+              <button onClick={() => startEdit('role')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
+              <button onClick={() => startEdit('company')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
             </div>
             {/* Graduation Year */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-gray-500">Class of</span>
+            <div className="flex items-center border-b-2 border-[#012169] mb-2">
               {editingField === 'graduationYear' ? (
                 <input
                   name="graduationYear"
                   value={editedProfile.graduationYear || ''}
                   onChange={handleInputChange}
                   onBlur={stopEdit}
-                  className="border-b-2 border-blue-700 focus:outline-none w-16"
+                  className="flex-1 bg-transparent focus:outline-none"
                   autoFocus
                 />
               ) : (
-                <span>{editedProfile.graduationYear}</span>
+                <span className="flex-1">{editedProfile.graduationYear}</span>
               )}
-              <button onClick={() => startEdit('graduationYear')} className="ml-2 text-blue-700"><FiEdit2 /></button>
+              <button onClick={() => startEdit('graduationYear')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
             </div>
             {/* Cohort */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center border-b-2 border-[#012169] mb-2">
               {editingField === 'pledgeClass' ? (
                 <>
                   <select
                     value={pledgeSemester}
                     onChange={e => handlePledgeClassChange(e.target.value, pledgeYear)}
-                    className="border-b-2 border-blue-700 focus:outline-none"
+                    className="bg-transparent focus:outline-none"
                   >
-                    <option value="Fall">Fall</option>
                     <option value="Spring">Spring</option>
+                    <option value="Fall">Fall</option>
                   </select>
-                  <span>'</span>
+                  <span className="mx-1">'</span>
                   <input
                     type="text"
                     value={pledgeYear}
                     onChange={e => handlePledgeClassChange(pledgeSemester, e.target.value)}
                     maxLength={2}
-                    className="w-8 border-b-2 border-blue-700 focus:outline-none"
+                    className="w-8 bg-transparent focus:outline-none"
+                    autoFocus
                   />
                 </>
               ) : (
                 <span>{editedProfile.pledgeClass}</span>
               )}
-              <button onClick={() => startEdit('pledgeClass')} className="ml-2 text-blue-700"><FiEdit2 /></button>
+              <button onClick={() => startEdit('pledgeClass')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
             </div>
             {/* Location */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center border-b-2 border-[#012169] mb-2">
               {editingField === 'location' ? (
                 <input
                   name="location"
                   value={editedProfile.location}
                   onChange={handleInputChange}
                   onBlur={stopEdit}
-                  className="border-b-2 border-blue-700 focus:outline-none w-48"
+                  className="flex-1 bg-transparent focus:outline-none"
                   autoFocus
                 />
               ) : (
-                <span>{editedProfile.location}</span>
+                <span className="flex-1">{editedProfile.location}</span>
               )}
-              <button onClick={() => startEdit('location')} className="ml-2 text-blue-700"><FiEdit2 /></button>
+              <button onClick={() => startEdit('location')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
             </div>
             {/* Major */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold">Major:</span>
+            <div className="flex items-center border-b-2 border-[#012169] mb-2">
               {editingField === 'major' ? (
                 <input
                   name="major"
                   value={editedProfile.major || ''}
                   onChange={handleInputChange}
                   onBlur={stopEdit}
-                  className="border-b-2 border-blue-700 focus:outline-none w-64"
+                  className="flex-1 bg-transparent focus:outline-none"
                   autoFocus
                 />
               ) : (
-                <span>{editedProfile.major}</span>
+                <span className="flex-1">{editedProfile.major}</span>
               )}
-              <button onClick={() => startEdit('major')} className="ml-2 text-blue-700"><FiEdit2 /></button>
+              <button onClick={() => startEdit('major')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
             </div>
             {/* Sphere */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold">Sphere:</span>
+            <div className="flex items-center border-b-2 border-[#012169] mb-2">
               {editingField === 'sphere' ? (
                 <div className="flex gap-2">
                   {sphereOptions.map(s => (
@@ -380,35 +351,33 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
               ) : (
                 <span>{editedProfile.sphere?.join(', ')}</span>
               )}
-              <button onClick={() => startEdit('sphere')} className="ml-2 text-blue-700"><FiEdit2 /></button>
+              <button onClick={() => startEdit('sphere')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
             </div>
             {/* Email */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold">Email:</span>
+            <div className="flex items-center border-b-2 border-[#012169] mb-2">
               {editingField === 'email' ? (
                 <input
                   name="email"
                   value={editedProfile.email}
                   onChange={handleInputChange}
                   onBlur={stopEdit}
-                  className="border-b-2 border-blue-700 focus:outline-none w-64"
+                  className="flex-1 bg-transparent focus:outline-none"
                   autoFocus
                 />
               ) : (
-                <span>{editedProfile.email}</span>
+                <span className="flex-1">{editedProfile.email}</span>
               )}
-              <button onClick={() => startEdit('email')} className="ml-2 text-blue-700"><FiEdit2 /></button>
+              <button onClick={() => startEdit('email')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
             </div>
             {/* LinkedIn */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold">LinkedIn:</span>
+            <div className="flex items-center border-b-2 border-[#012169] mb-2">
               {editingField === 'linkedinUrl' ? (
                 <input
                   name="linkedinUrl"
                   value={editedProfile.linkedinUrl || ''}
                   onChange={handleInputChange}
                   onBlur={stopEdit}
-                  className="border-b-2 border-blue-700 focus:outline-none w-64"
+                  className="flex-1 bg-transparent focus:outline-none"
                   autoFocus
                 />
               ) : (
@@ -418,10 +387,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                   </a>
                 )
               )}
-              <button onClick={() => startEdit('linkedinUrl')} className="ml-2 text-blue-700"><FiEdit2 /></button>
+              <button onClick={() => startEdit('linkedinUrl')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
             </div>
             {/* Bio */}
-            <div className="mt-6 relative">
+            <div className="mt-4 relative">
               <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-900 rounded-full"></div>
               <div className="pl-4">
                 {editingField === 'bio' ? (
@@ -440,7 +409,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                     {editedProfile.bio || 'No bio provided'}
                   </div>
                 )}
-                <button onClick={() => startEdit('bio')} className="absolute top-2 right-2 text-blue-700"><FiEdit2 /></button>
+                <button onClick={() => startEdit('bio')} className="absolute top-2 right-2 text-[#012169]"><FiEdit2 /></button>
               </div>
             </div>
             {/* Save/Cancel Buttons */}
