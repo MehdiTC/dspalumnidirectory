@@ -14,6 +14,7 @@ export type Profile = {
   company: string;
   sphere?: string[];
   major?: string;
+  minor?: string;
   location: string;
   pledgeClass: string;
   graduationYear?: string;
@@ -39,12 +40,6 @@ function getInitials(name: string) {
     .toUpperCase()
     .slice(0, 2);
 }
-
-const sphereOptions = ['Finance', 'Consulting', 'Tech', 'Other'] as const;
-type Sphere = typeof sphereOptions[number];
-
-const semesterOptions = ['Fall', 'Spring'] as const;
-type Semester = typeof semesterOptions[number];
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onEdit }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -238,38 +233,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 </div>
               )}
             </div>
-            {isEditing && (
-              <div className="flex flex-col items-center gap-2">
-                <button
-                  onClick={handleProfilePicClick}
-                  className="px-4 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition"
-                >
-                  Change Photo
-                </button>
-                {editedProfile.profile_picture_url && (
-                  <button
-                    onClick={() => {
-                      if (editedProfile.profile_picture_url?.startsWith('data:image/')) {
-                        setShowCropper(true);
-                      } else if (editedProfile.profile_picture_url) {
-                        // Convert existing image to File object for editing
-                        fetch(editedProfile.profile_picture_url)
-                          .then(res => res.blob())
-                          .then(blob => {
-                            const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
-                            setNewProfilePic(file);
-                            setShowCropper(true);
-                          })
-                          .catch(err => setError('Failed to load image for editing'));
-                      }
-                    }}
-                    className="px-4 py-2 border border-[#012169] text-[#012169] rounded-md font-semibold hover:bg-[#012169]/5 transition"
-                  >
-                    Edit Crop
-                  </button>
-                )}
-              </div>
-            )}
             <input
               type="file"
               accept="image/*"
@@ -282,7 +245,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 onClick={() => setIsEditing(true)}
                 className="px-4 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition"
               >
-                My Profile
+                Edit Profile
               </button>
             )}
           </div>
@@ -339,84 +302,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 )}
               </div>
 
-              {/* Graduation Year */}
-              <div className="group relative">
-                {isEditing ? (
-                  <input
-                    name="graduationYear"
-                    value={editedProfile.graduationYear || ''}
-                    onChange={handleInputChange}
-                    placeholder="Graduation Year"
-                    type="number"
-                    min="1900"
-                    max="2100"
-                    className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                  />
-                ) : (
-                  editedProfile.graduationYear && (
-                    <div className="text-gray-500">Class of {editedProfile.graduationYear}</div>
-                  )
+              {/* Pledge Class & Grad Year */}
+              <div className="text-gray-500 text-sm">
+                {editedProfile.graduationYear && (
+                  <span>Class of {editedProfile.graduationYear}</span>
                 )}
-                {isEditing && (
-                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                )}
-              </div>
-
-              {/* Cohort */}
-              <div className="group relative">
-                {isEditing ? (
-                  <div className="flex gap-2 items-center">
-                    <select
-                      name="semester"
-                      value={editedProfile.pledgeClass?.split(' ')[0] || ''}
-                      onChange={(e) => {
-                        const year = editedProfile.pledgeClass?.split(' ')[1] || '';
-                        setEditedProfile(prev => {
-                          if (!prev) return null;
-                          return {
-                            ...prev,
-                            pledgeClass: `${e.target.value} ${year}`.trim()
-                          };
-                        });
-                        setHasChanges(true);
-                      }}
-                      className="bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                    >
-                      <option value="">Select semester</option>
-                      {semesterOptions.map(option => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      name="year"
-                      value={editedProfile.pledgeClass?.split(' ')[1] || ''}
-                      onChange={(e) => {
-                        const semester = editedProfile.pledgeClass?.split(' ')[0] || '';
-                        const year = e.target.value.replace(/\D/g, '').slice(0, 2);
-                        setEditedProfile(prev => {
-                          if (!prev) return null;
-                          return {
-                            ...prev,
-                            pledgeClass: `${semester} ${year}`.trim()
-                          };
-                        });
-                        setHasChanges(true);
-                      }}
-                      placeholder="YY"
-                      maxLength={2}
-                      className="w-16 bg-transparent border-b-2 border-[#012169] focus:outline-none text-center"
-                    />
-                  </div>
-                ) : (
-                  editedProfile.pledgeClass && (
-                    <div className="text-gray-500">{editedProfile.pledgeClass}</div>
-                  )
-                )}
-                {isEditing && (
-                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                )}
+                {editedProfile.graduationYear && editedProfile.pledgeClass && <span> • </span>}
+                {editedProfile.pledgeClass && <span>{editedProfile.pledgeClass}</span>}
               </div>
 
               {/* Location */}
@@ -461,36 +353,44 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                   )}
                 </div>
 
+                {/* Minor */}
+                <div className="group relative">
+                  {isEditing ? (
+                    <input
+                      name="minor"
+                      value={editedProfile.minor || ''}
+                      onChange={handleInputChange}
+                      placeholder="Add your minor"
+                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  ) : (
+                    editedProfile.minor && (
+                      <div className="flex items-center text-gray-700">
+                        <span className="font-semibold w-20">Minor:</span>
+                        <span>{editedProfile.minor}</span>
+                      </div>
+                    )
+                  )}
+                  {isEditing && (
+                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                  )}
+                </div>
+
                 {/* Spheres */}
                 <div className="group relative">
                   {isEditing ? (
-                    <select
+                    <input
                       name="sphere"
-                      value={editedProfile.sphere?.[0] || ''}
-                      onChange={(e) => {
-                        setEditedProfile(prev => {
-                          if (!prev) return null;
-                          return {
-                            ...prev,
-                            sphere: e.target.value ? [e.target.value] : []
-                          };
-                        });
-                        setHasChanges(true);
-                      }}
+                      value={editedProfile.sphere?.join(', ') || ''}
+                      onChange={handleInputChange}
+                      placeholder="Add your spheres (comma-separated)"
                       className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                    >
-                      <option value="">Select a sphere</option>
-                      {sphereOptions.map(option => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   ) : (
                     editedProfile.sphere && editedProfile.sphere.length > 0 && (
                       <div className="flex items-center text-gray-700">
-                        <span className="font-semibold w-20">Sphere:</span>
-                        <span className="text-[#012169] font-medium">{editedProfile.sphere[0]}</span>
+                        <span className="font-semibold w-20">Spheres:</span>
+                        <span className="text-[#012169] font-medium">{editedProfile.sphere.join(', ')}</span>
                       </div>
                     )
                   )}
@@ -536,7 +436,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                       <div className="flex items-center text-gray-700">
                         <span className="font-semibold w-20">LinkedIn:</span>
                         <a
-                          href={editedProfile.linkedinUrl || '#'}
+                          href={editedProfile.linkedinUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-[#012169] hover:underline"
@@ -560,7 +460,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                     value={editedProfile.bio || ''}
                     onChange={handleInputChange}
                     placeholder="Add a short bio"
-                    className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none bg-gray-50/50 rounded-lg p-2"
+                    className="w-full bg-transparent border-2 border-[#012169] rounded-lg p-2 focus:outline-none"
                     rows={4}
                   />
                 ) : (
