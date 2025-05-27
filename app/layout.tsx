@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientLayout from './ClientLayout'
 import { Analytics } from "@vercel/analytics/next"
+import PostHogProvider from './PostHogProvider'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ClientLayout>{children}</ClientLayout>
+        <PostHogProvider>
+          <ClientLayout>{children}</ClientLayout>
+        </PostHogProvider>
       </body>
     </html>
   );
