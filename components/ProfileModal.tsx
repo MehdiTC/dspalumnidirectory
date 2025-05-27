@@ -1,11 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSession } from '@supabase/auth-helpers-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiEdit2 } from 'react-icons/fi';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
-import Cropper from 'react-easy-crop';
-import { getCroppedImg } from '@/lib/cropImage';
-import { cn } from '@/lib/utils';
 
 export type Profile = {
   id?: string;
@@ -37,152 +31,38 @@ function getInitials(name: string) {
     .split(' ')
     .map((n) => n[0])
     .join('')
-    .toUpperCase()
-    .slice(0, 2);
+    .toUpperCase();
 }
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onEdit }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedProfile, setEditedProfile] = useState<Profile | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [showCropper, setShowCropper] = useState(false);
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
-  const [newProfilePic, setNewProfilePic] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const session = useSession();
-  const supabase = useSupabaseClient();
+  const isOwner = session?.user?.id && profile?.user_id && session.user.id === profile.user_id;
 
   useEffect(() => {
-    if (profile) {
-      setEditedProfile(profile);
+    if (!open) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
     }
-  }, [profile]);
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [open, onClose]);
 
+  // Listen for edit profile event
   useEffect(() => {
-    if (!open) {
-      setIsEditing(false);
-      setHasChanges(false);
-      setError(null);
-    }
-  }, [open]);
+    const handleCloseModal = () => {
+      onClose();
+    };
+    window.addEventListener('closeProfileModal', handleCloseModal);
+    return () => window.removeEventListener('closeProfileModal', handleCloseModal);
+  }, [onClose]);
 
+  // Close on outside click
   function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === overlayRef.current) onClose();
   }
 
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    const { name, value } = e.target;
-    setEditedProfile(prev => {
-      if (!prev) return null;
-      const newProfile = { ...prev, [name]: value };
-      setHasChanges(true);
-      return newProfile;
-    });
-  }
-
-  function handleProfilePicClick() {
-    fileInputRef.current?.click();
-  }
-
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    if (!file.type.startsWith('image/')) {
-      setError('File must be an image');
-      return;
-    }
-    
-    setNewProfilePic(file);
-    setShowCropper(true);
-  }
-
-  async function handleCropComplete(_: any, croppedAreaPixels: any) {
-    setCroppedAreaPixels(croppedAreaPixels);
-  }
-
-  async function handleCropSave() {
-    if (!newProfilePic || !croppedAreaPixels) return;
-    
-    try {
-      const cropped = await getCroppedImg(newProfilePic, croppedAreaPixels);
-      setEditedProfile(prev => {
-        if (!prev) return null;
-        return { ...prev, profile_picture_url: cropped };
-      });
-      setHasChanges(true);
-      setShowCropper(false);
-    } catch (err) {
-      setError('Failed to crop image');
-    }
-  }
-
-  async function handleSave() {
-    if (!editedProfile || !session?.user) return;
-    
-    setIsSubmitting(true);
-    setError(null);
-    
-    try {
-      // Upload new profile picture if changed
-      let profile_picture_url = editedProfile.profile_picture_url;
-      if (editedProfile.profile_picture_url?.startsWith('data:image/')) {
-        const fileExt = 'jpg';
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${session.user.id}/${fileName}`;
-        
-        const blob = dataURLtoBlob(editedProfile.profile_picture_url);
-        const { error: uploadError } = await supabase.storage
-          .from('profile-pictures')
-          .upload(filePath, blob, {
-            cacheControl: '3600',
-            upsert: true,
-          });
-          
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('profile-pictures')
-          .getPublicUrl(filePath);
-          
-        profile_picture_url = publicUrl;
-      }
-
-      // Update profile
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          ...editedProfile,
-          profile_picture_url,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', session.user.id);
-
-      if (updateError) throw updateError;
-
-      setIsEditing(false);
-      setHasChanges(false);
-      onEdit(); // Refresh profile data
-    } catch (err: any) {
-      setError(err.message || 'Failed to update profile');
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  function handleCancel() {
-    setEditedProfile(profile);
-    setIsEditing(false);
-    setHasChanges(false);
-    setError(null);
-  }
-
-  if (!profile || !editedProfile) return null;
+  if (!open || !profile) return null;
 
   return (
     <div
@@ -193,12 +73,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
       role="dialog"
       tabIndex={-1}
     >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="relative bg-white max-w-2xl w-full rounded-lg shadow-xl p-10 overflow-y-auto max-h-[90vh]"
-      >
+      <div className="relative bg-white max-w-2xl w-full rounded-lg shadow-xl p-10 overflow-y-auto max-h-[90vh]">
         <button
           onClick={onClose}
           aria-label="Close"
@@ -208,375 +83,107 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-
         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
           {/* Profile Picture */}
           <div className="flex-shrink-0 flex flex-col items-center gap-4">
-            <div className="relative group">
-              {editedProfile?.profile_picture_url ? (
-                <img
-                  src={editedProfile.profile_picture_url}
-                  alt={editedProfile.name}
-                  className="w-32 h-32 rounded-full object-cover border-4 border-[#012169] shadow"
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-full bg-[#012169] flex items-center justify-center text-white text-4xl font-bold shadow">
-                  {getInitials(editedProfile.name)}
-                </div>
-              )}
-              {isEditing && (
-                <div
-                  onClick={handleProfilePicClick}
-                  className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                >
-                  <span className="text-white text-sm font-medium">Change Photo</span>
-                </div>
-              )}
-            </div>
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
-            {session?.user?.id === profile.user_id && !isEditing && (
+            {profile.profile_picture_url ? (
+              <img
+                src={profile.profile_picture_url}
+                alt={profile.name}
+                className="w-32 h-32 rounded-full object-cover border-4 border-[#012169] shadow"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-full bg-[#012169] flex items-center justify-center text-white text-4xl font-bold shadow">
+                {getInitials(profile.name)}
+              </div>
+            )}
+            {isOwner && (
               <button
-                onClick={() => setIsEditing(true)}
+                onClick={onEdit}
                 className="px-4 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition"
               >
                 Edit Profile
               </button>
             )}
           </div>
-
           {/* Main Info */}
-          <div className="flex-1 min-w-0">
-            <div className="space-y-4">
-              {/* Name */}
-              <div className="group relative">
-                {isEditing ? (
-                  <input
-                    name="name"
-                    value={editedProfile.name}
-                    onChange={handleInputChange}
-                    className="w-full text-2xl font-bold text-[#012169] bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                  />
-                ) : (
-                  <h2 className="text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
-                )}
-                {isEditing && (
-                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                )}
-              </div>
-
-              {/* Role & Company */}
-              <div className="group relative">
-                {isEditing ? (
-                  <div className="flex gap-2">
-                    <input
-                      name="role"
-                      value={editedProfile.role}
-                      onChange={handleInputChange}
-                      placeholder="Role"
-                      className="flex-1 bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                    />
-                    <span className="text-gray-500">@</span>
-                    <input
-                      name="company"
-                      value={editedProfile.company}
-                      onChange={handleInputChange}
-                      placeholder="Company"
-                      className="flex-1 bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                    />
-                  </div>
-                ) : (
-                  <div className="text-gray-700">
-                    {editedProfile.role}
-                    {editedProfile.role && editedProfile.company ? ' @ ' : ''}
-                    {editedProfile.company}
-                  </div>
-                )}
-                {isEditing && (
-                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                )}
-              </div>
-
-              {/* Pledge Class & Grad Year */}
-              <div className="text-gray-500 text-sm">
-                {editedProfile.graduationYear && (
-                  <span>Class of {editedProfile.graduationYear}</span>
-                )}
-                {editedProfile.graduationYear && editedProfile.pledgeClass && <span> • </span>}
-                {editedProfile.pledgeClass && <span>{editedProfile.pledgeClass}</span>}
-              </div>
-
-              {/* Location */}
-              <div className="group relative">
-                {isEditing ? (
-                  <input
-                    name="location"
-                    value={editedProfile.location}
-                    onChange={handleInputChange}
-                    className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                  />
-                ) : (
-                  <div className="text-gray-500">{editedProfile.location}</div>
-                )}
-                {isEditing && (
-                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                )}
-              </div>
-
-              {/* Academic Info */}
-              <div className="space-y-2">
-                {/* Major */}
-                <div className="group relative">
-                  {isEditing ? (
-                    <input
-                      name="major"
-                      value={editedProfile.major || ''}
-                      onChange={handleInputChange}
-                      placeholder="Add your major"
-                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                    />
-                  ) : (
-                    editedProfile.major && (
-                      <div className="flex items-center text-gray-700">
-                        <span className="font-semibold w-20">Major:</span>
-                        <span>{editedProfile.major}</span>
-                      </div>
-                    )
-                  )}
-                  {isEditing && (
-                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+          <div className="flex-1 min-w-0 w-full">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-x-3 mb-1">
+                  <h2 className="text-3xl font-bold text-gray-900 leading-tight break-words flex-1 min-w-0">{profile.name}</h2>
+                  {profile.linkedinUrl && (
+                    <a
+                      href={profile.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#012169] hover:text-indigo-700 flex items-center justify-center ml-1"
+                      aria-label="LinkedIn profile"
+                    >
+                      <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                    </a>
                   )}
                 </div>
-
-                {/* Minor */}
-                <div className="group relative">
-                  {isEditing ? (
-                    <input
-                      name="minor"
-                      value={editedProfile.minor || ''}
-                      onChange={handleInputChange}
-                      placeholder="Add your minor"
-                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                    />
-                  ) : (
-                    editedProfile.minor && (
-                      <div className="flex items-center text-gray-700">
-                        <span className="font-semibold w-20">Minor:</span>
-                        <span>{editedProfile.minor}</span>
-                      </div>
-                    )
-                  )}
-                  {isEditing && (
-                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                  )}
-                </div>
-
-                {/* Spheres */}
-                <div className="group relative">
-                  {isEditing ? (
-                    <input
-                      name="sphere"
-                      value={editedProfile.sphere?.join(', ') || ''}
-                      onChange={handleInputChange}
-                      placeholder="Add your spheres (comma-separated)"
-                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                    />
-                  ) : (
-                    editedProfile.sphere && editedProfile.sphere.length > 0 && (
-                      <div className="flex items-center text-gray-700">
-                        <span className="font-semibold w-20">Spheres:</span>
-                        <span className="text-[#012169] font-medium">{editedProfile.sphere.join(', ')}</span>
-                      </div>
-                    )
-                  )}
-                  {isEditing && (
-                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                  )}
-                </div>
-
-                {/* Email */}
-                <div className="group relative">
-                  {isEditing ? (
-                    <input
-                      name="email"
-                      value={editedProfile.email}
-                      onChange={handleInputChange}
-                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                    />
-                  ) : (
-                    <div className="flex items-center text-gray-700">
-                      <span className="font-semibold w-20">Email:</span>
-                      <a href={`mailto:${editedProfile.email}`} className="underline hover:text-indigo-700 break-all">
-                        {editedProfile.email}
-                      </a>
-                    </div>
-                  )}
-                  {isEditing && (
-                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                  )}
-                </div>
-
-                {/* LinkedIn */}
-                <div className="group relative">
-                  {isEditing ? (
-                    <input
-                      name="linkedinUrl"
-                      value={editedProfile.linkedinUrl || ''}
-                      onChange={handleInputChange}
-                      placeholder="Add your LinkedIn URL"
-                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                    />
-                  ) : (
-                    editedProfile.linkedinUrl && (
-                      <div className="flex items-center text-gray-700">
-                        <span className="font-semibold w-20">LinkedIn:</span>
-                        <a
-                          href={editedProfile.linkedinUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#012169] hover:underline"
-                        >
-                          {editedProfile.linkedinUrl.replace(/^https?:\/\/|www\.linkedin\.com\/in\//, '')}
-                        </a>
-                      </div>
-                    )
-                  )}
-                  {isEditing && (
-                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                  )}
-                </div>
-              </div>
-
-              {/* Bio */}
-              <div className="group relative">
-                {isEditing ? (
-                  <textarea
-                    name="bio"
-                    value={editedProfile.bio || ''}
-                    onChange={handleInputChange}
-                    placeholder="Add a short bio"
-                    className="w-full bg-transparent border-2 border-[#012169] rounded-lg p-2 focus:outline-none"
-                    rows={4}
-                  />
-                ) : (
-                  editedProfile.bio && (
-                    <div className="text-gray-700 whitespace-pre-wrap">{editedProfile.bio}</div>
-                  )
-                )}
-                {isEditing && (
-                  <FiEdit2 className="absolute right-0 top-0 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                )}
               </div>
             </div>
-
-            {/* Save/Cancel buttons */}
-            {isEditing && hasChanges && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex gap-4 mt-6"
-              >
-                <button
-                  onClick={handleSave}
-                  disabled={isSubmitting}
-                  className="px-6 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition disabled:opacity-60"
-                >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
-                </button>
-                <button
-                  onClick={handleCancel}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md font-semibold hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-              </motion.div>
+            <div className="text-gray-600 text-base font-semibold mb-1">
+              {profile.role}
+              {profile.company && (
+                <span> @ {profile.company}</span>
+              )}
+            </div>
+            <div className="text-gray-500 text-sm mb-1">
+              {profile.graduationYear && (
+                <span>Class of {profile.graduationYear}</span>
+              )}
+              {profile.graduationYear && profile.pledgeClass && <span> • </span>}
+              {profile.pledgeClass && <span>{profile.pledgeClass} </span>}
+            </div>
+            {profile.location && (
+              <div className="text-gray-500 text-sm mb-4">{profile.location}</div>
             )}
-            {error && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-red-500 mt-4"
-              >
-                {error}
-              </motion.p>
+            {/* Academic Section */}
+            {(profile.major || profile.minor) && (
+              <div className="mb-4 space-y-1">
+                {profile.major && (
+                  <div className="flex items-center text-gray-700 text-sm">
+                    <span className="font-semibold w-20">Major:</span>
+                    <span className="truncate">{profile.major}</span>
+                  </div>
+                )}
+                {profile.minor && (
+                  <div className="flex items-center text-gray-700 text-sm">
+                    <span className="font-semibold w-20">Minor:</span>
+                    <span className="truncate">{profile.minor}</span>
+                  </div>
+                )}
+                {profile.sphere && profile.sphere.length > 0 && (
+                  <div className="flex items-center text-gray-700 text-sm">
+                    <span className="font-semibold w-20">Spheres:</span>
+                    <span className="truncate text-[#012169] font-medium">{profile.sphere.join(', ')}</span>
+                  </div>
+                )}
+                <div className="flex items-center text-gray-700 text-sm">
+                  <span className="font-semibold w-20">Email:</span>
+                  <a href={`mailto:${profile.email}`} className="truncate underline hover:text-indigo-700 break-all">{profile.email}</a>
+                </div>
+              </div>
+            )}
+            {/* Divider */}
+            <div className="border-t border-gray-200 my-6" />
+            {/* Bio Block */}
+            {profile.bio && (
+              <blockquote className="italic text-gray-700 text-base leading-relaxed border-l-4 border-[#012169] pl-4 bg-gray-50 py-4">
+                {profile.bio}
+              </blockquote>
             )}
           </div>
         </div>
-
-        {/* Image Cropper Modal */}
-        <AnimatePresence>
-          {showCropper && newProfilePic && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
-            >
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-white rounded-xl p-6 shadow-lg flex flex-col items-center gap-4"
-              >
-                <div className="relative w-64 h-64 bg-gray-100 rounded-lg overflow-hidden">
-                  <Cropper
-                    image={URL.createObjectURL(newProfilePic)}
-                    crop={crop}
-                    zoom={zoom}
-                    aspect={1}
-                    onCropChange={setCrop}
-                    onZoomChange={setZoom}
-                    onCropComplete={handleCropComplete}
-                    showGrid={true}
-                    cropShape="round"
-                  />
-                </div>
-                <input
-                  type="range"
-                  min={1}
-                  max={3}
-                  step={0.01}
-                  value={zoom}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-48"
-                />
-                <div className="flex gap-4">
-                  <button
-                    className="px-4 py-2 bg-[#012169] text-white rounded-lg"
-                    onClick={handleCropSave}
-                  >
-                    Save
-                  </button>
-                  <button
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg"
-                    onClick={() => setShowCropper(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+      </div>
     </div>
   );
 };
-
-// Helper function to convert dataURL to Blob
-function dataURLtoBlob(dataurl: string) {
-  const arr = dataurl.split(',');
-  const mime = arr[0].match(/:(.*?);/)?.[1] || '';
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) u8arr[n] = bstr.charCodeAt(n);
-  return new Blob([u8arr], { type: mime });
-}
 
 export default ProfileModal; 
