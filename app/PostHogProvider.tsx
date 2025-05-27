@@ -9,15 +9,10 @@ export default function PostHogProvider({ children }: { children: React.ReactNod
   const searchParams = useSearchParams()
   const user = useUser()
 
-  // Skip analytics on 404 pages
-  const is404 = pathname === '/404' || pathname === '/_not-found'
-
   // 1. Track pageviews on route change
   useEffect(() => {
-    if (!is404) {
-      posthog.capture('$pageview')
-    }
-  }, [pathname, searchParams, is404])
+    posthog.capture('$pageview')
+  }, [pathname, searchParams])
 
   // 2. Track page leaves
   useEffect(() => {

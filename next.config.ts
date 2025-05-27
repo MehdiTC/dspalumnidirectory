@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   images: {
     domains: ['wvyplrbbicctfdtwwxyt.supabase.co'],
   },
@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-};
+  output: 'standalone',
+  experimental: {
+    missingSuspenseWithCSRBailout: false
+  }
+} as NextConfig;
 
 export default nextConfig;
