@@ -555,7 +555,6 @@ export default function JoinFlow({ onComplete, onClose, initialProfile }: JoinFl
               )}
               placeholder="netid@duke.edu"
               autoFocus
-              readOnly={!!initialProfile}
             />
             {errors.email && <p className="text-red-500 mt-2">{errors.email}</p>}
           </div>
