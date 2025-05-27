@@ -978,14 +978,6 @@ export default function JoinFlow({ onComplete, onClose, initialProfile }: JoinFl
         <div className="mt-2">{renderStep()}</div>
         {/* Bottom buttons */}
         <div className="flex justify-between mt-8">
-          {step !== 'welcome' && step !== 'confirm' && (
-            <button
-              className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition text-lg"
-              onClick={next}
-            >
-              Next
-            </button>
-          )}
           {initialProfile && step !== 'welcome' && step !== 'confirm' && (
             <button
               className={cn(
@@ -996,6 +988,14 @@ export default function JoinFlow({ onComplete, onClose, initialProfile }: JoinFl
               disabled={submitting}
             >
               {submitting ? 'Saving...' : 'Save Changes'}
+            </button>
+          )}
+          {step !== 'welcome' && step !== 'confirm' && (
+            <button
+              className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition text-lg"
+              onClick={next}
+            >
+              Next
             </button>
           )}
         </div>
