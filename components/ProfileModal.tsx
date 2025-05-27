@@ -43,6 +43,9 @@ function getInitials(name: string) {
 const sphereOptions = ['Finance', 'Consulting', 'Tech', 'Other'] as const;
 type Sphere = typeof sphereOptions[number];
 
+const semesterOptions = ['Fall', 'Spring'] as const;
+type Semester = typeof semesterOptions[number];
+
 const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onEdit }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<Profile | null>(null);
@@ -279,7 +282,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 onClick={() => setIsEditing(true)}
                 className="px-4 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition"
               >
-                Edit Profile
+                My Profile
               </button>
             )}
           </div>
@@ -362,13 +365,50 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
               {/* Cohort */}
               <div className="group relative">
                 {isEditing ? (
-                  <input
-                    name="pledgeClass"
-                    value={editedProfile.pledgeClass}
-                    onChange={handleInputChange}
-                    placeholder="Cohort (e.g., Fall '23)"
-                    className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                  />
+                  <div className="flex gap-2 items-center">
+                    <select
+                      name="semester"
+                      value={editedProfile.pledgeClass?.split(' ')[0] || ''}
+                      onChange={(e) => {
+                        const year = editedProfile.pledgeClass?.split(' ')[1] || '';
+                        setEditedProfile(prev => {
+                          if (!prev) return null;
+                          return {
+                            ...prev,
+                            pledgeClass: `${e.target.value} ${year}`.trim()
+                          };
+                        });
+                        setHasChanges(true);
+                      }}
+                      className="bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    >
+                      <option value="">Select semester</option>
+                      {semesterOptions.map(option => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      name="year"
+                      value={editedProfile.pledgeClass?.split(' ')[1] || ''}
+                      onChange={(e) => {
+                        const semester = editedProfile.pledgeClass?.split(' ')[0] || '';
+                        const year = e.target.value.replace(/\D/g, '').slice(0, 2);
+                        setEditedProfile(prev => {
+                          if (!prev) return null;
+                          return {
+                            ...prev,
+                            pledgeClass: `${semester} ${year}`.trim()
+                          };
+                        });
+                        setHasChanges(true);
+                      }}
+                      placeholder="YY"
+                      maxLength={2}
+                      className="w-16 bg-transparent border-b-2 border-[#012169] focus:outline-none text-center"
+                    />
+                  </div>
                 ) : (
                   editedProfile.pledgeClass && (
                     <div className="text-gray-500">{editedProfile.pledgeClass}</div>
@@ -520,7 +560,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                     value={editedProfile.bio || ''}
                     onChange={handleInputChange}
                     placeholder="Add a short bio"
-                    className="w-full bg-transparent border-2 border-[#012169] rounded-lg p-2 focus:outline-none"
+                    className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none bg-gray-50/50 rounded-lg p-2"
                     rows={4}
                   />
                 ) : (
