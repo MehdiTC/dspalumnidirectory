@@ -334,11 +334,11 @@ export default function Home() {
                 Delta Sigma Pi — Duke University
               </h1>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               {/* Only show Edit Profile in header if user has a profile */}
               {user && myProfile && (
                 <button
-                  className="px-5 py-2.5 text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169]"
+                  className="px-3 sm:px-5 py-2 text-sm sm:text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169] whitespace-nowrap"
                   onClick={() => setEditProfile(myProfile)}
                 >
                   Edit Profile
@@ -347,21 +347,21 @@ export default function Home() {
               {user ? (
                 <button
                   onClick={() => supabase.auth.signOut()}
-                  className="px-4 py-2 text-sm font-semibold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-sm hover:shadow-md transition"
+                  className="px-3 sm:px-4 py-2 text-sm font-semibold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-sm hover:shadow-md transition whitespace-nowrap"
                 >
                   Log out
                 </button>
               ) : (
                 <Link
                   href="/login"
-                  className="px-3 sm:px-5 py-2 text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169] whitespace-nowrap"
+                  className="px-3 sm:px-5 py-2 text-sm sm:text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169] whitespace-nowrap"
                 >
                   Sign in
                 </Link>
               )}
               {/* Disable Join Directory if user already has a profile */}
               <button
-                className="px-3 sm:px-5 py-2 text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                className="px-3 sm:px-5 py-2 text-sm sm:text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 onClick={handleJoinClick}
                 disabled={!!myProfile}
               >

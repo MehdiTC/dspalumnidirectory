@@ -370,8 +370,6 @@ export default function JoinFlow({ onComplete, onClose, initialProfile }: JoinFl
         return;
       }
 
-      console.log('Current user:', session.user.id);
-
       // 1. Upload image to Supabase Storage
       let picUrl = null;
       if (form.croppedPic && form.croppedPic.startsWith('data:image/')) {
@@ -380,22 +378,29 @@ export default function JoinFlow({ onComplete, onClose, initialProfile }: JoinFl
           const fileName = `${Date.now()}.${fileExt}`;
           const filePath = `${session.user.id}/${fileName}`;
           
-          console.log('Starting image upload process...');
-          
-          // List all buckets for debugging
-          const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-          console.log('Available buckets:', buckets);
-          
-          if (bucketsError) {
-            console.error('Error listing buckets:', bucketsError);
-            throw new Error(`Failed to list storage buckets: ${bucketsError.message}`);
+          // Validate image size before upload
+          const blob = dataURLtoBlob(form.croppedPic);
+          if (blob.size > 5 * 1024 * 1024) { // 5MB limit
+            throw new Error('Image size must be less than 5MB');
           }
 
-          // Try to upload directly to the bucket
-          console.log('Attempting to upload to profile-pictures bucket...');
+          // Validate image dimensions
+          const img = new Image();
+          img.src = form.croppedPic;
+          await new Promise((resolve, reject) => {
+            img.onload = () => {
+              if (img.width > 2000 || img.height > 2000) {
+                reject(new Error('Image dimensions must be less than 2000x2000 pixels'));
+              }
+              resolve(null);
+            };
+            img.onerror = () => reject(new Error('Failed to load image'));
+          });
+
+          // Upload to Supabase Storage
           const { data, error } = await supabase.storage
             .from('profile-pictures')
-            .upload(filePath, dataURLtoBlob(form.croppedPic), {
+            .upload(filePath, blob, {
               cacheControl: '3600',
               upsert: true,
             });
@@ -405,16 +410,16 @@ export default function JoinFlow({ onComplete, onClose, initialProfile }: JoinFl
             throw new Error(`Failed to upload image: ${error.message}`);
           }
 
-          console.log('Image uploaded successfully, getting public URL...');
           const { data: { publicUrl } } = supabase.storage
             .from('profile-pictures')
             .getPublicUrl(filePath);
           
           picUrl = publicUrl;
-          console.log('Image upload complete. Public URL:', publicUrl);
         } catch (uploadError: any) {
           console.error('Image upload failed:', uploadError);
-          throw new Error(`Failed to upload image: ${uploadError.message}`);
+          setErrors({ profilePic: uploadError.message || 'Failed to upload image' });
+          setSubmitting(false);
+          return;
         }
       } else if (form.croppedPic) {
         picUrl = form.croppedPic;

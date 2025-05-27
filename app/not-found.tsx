@@ -2,8 +2,9 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
-export default function NotFound() {
+function NotFoundContent() {
   const searchParams = useSearchParams();
   const from = searchParams.get('from');
 
@@ -28,5 +29,20 @@ export default function NotFound() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NotFound() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#012169] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <NotFoundContent />
+    </Suspense>
   );
 } 
