@@ -310,31 +310,30 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
           </div>
 
           {/* Main Info */}
-          <div className="flex-1 min-w-0 w-full">
-            {/* Name row with LinkedIn icon flush right, baseline aligned */}
-            {!isEditing && (
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
-                {editedProfile.linkedinUrl && (
-                  <a
-                    href={editedProfile.linkedinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#012169] hover:text-blue-700 ml-4 flex-shrink-0"
-                    aria-label="LinkedIn profile"
-                    style={{ lineHeight: 0 }}
-                  >
-                    <FaLinkedin size={28} />
-                  </a>
-                )}
-              </div>
-            )}
-            {/* Info sections with increased vertical spacing */}
-            <div className="flex flex-col gap-y-4">
+          <div className="flex-1 min-w-0">
+            <div className="space-y-4">
+              {/* Name and LinkedIn logo row */}
+              {!isEditing && (
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
+                  {editedProfile.linkedinUrl && (
+                    <a
+                      href={editedProfile.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-2 text-[#012169] hover:text-blue-700"
+                      aria-label="LinkedIn profile"
+                    >
+                      <FaLinkedin size={30} />
+                    </a>
+                  )}
+                </div>
+              )}
+
               {/* Graduation Year, Cohort, Location (display mode) */}
               {!isEditing && (
                 <>
-                  <div className="text-gray-500 text-sm">
+                  <div className="text-gray-500 text-sm mb-1">
                     {editedProfile.graduationYear && (
                       <span>Class of {editedProfile.graduationYear}</span>
                     )}
@@ -342,44 +341,88 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                     {editedProfile.pledgeClass && <span>{editedProfile.pledgeClass}</span>}
                   </div>
                   {editedProfile.location && (
-                    <div className="text-gray-500 text-sm">{editedProfile.location}</div>
+                    <div className="text-gray-500 text-sm mb-4">{editedProfile.location}</div>
                   )}
                 </>
               )}
-              {/* Major */}
-              {!isEditing && editedProfile.major && (
-                <div className="flex items-center text-gray-700">
-                  <span className="font-semibold w-20">Major:</span>
-                  <span>{editedProfile.major}</span>
-                </div>
-              )}
-              {/* Spheres */}
-              {!isEditing && editedProfile.sphere && editedProfile.sphere.length > 0 && (
-                <div className="flex items-center text-gray-700">
-                  <span className="font-semibold w-20">Spheres:</span>
-                  <span className="text-[#012169] font-medium">{editedProfile.sphere.join(', ')}</span>
-                </div>
-              )}
-              {/* Email */}
+
+              {/* Major, Spheres, Email (view mode) */}
               {!isEditing && (
-                <div className="flex items-center text-gray-700">
-                  <span className="font-semibold w-20">Email:</span>
-                  <a href={`mailto:${editedProfile.email}`} className="underline hover:text-indigo-700 break-all">
-                    {editedProfile.email}
-                  </a>
-                </div>
+                <>
+                  {editedProfile.major && (
+                    <div className="flex items-center text-gray-700 mb-2">
+                      <span className="font-semibold w-20">Major:</span>
+                      <span>{editedProfile.major}</span>
+                    </div>
+                  )}
+                  {editedProfile.sphere && editedProfile.sphere.length > 0 && (
+                    <div className="flex items-center text-gray-700 mb-2">
+                      <span className="font-semibold w-20">Spheres:</span>
+                      <span className="text-[#012169] font-medium">{editedProfile.sphere.join(', ')}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center text-gray-700 mb-2">
+                    <span className="font-semibold w-20">Email:</span>
+                    <a href={`mailto:${editedProfile.email}`} className="underline hover:text-indigo-700 break-all">
+                      {editedProfile.email}
+                    </a>
+                  </div>
+                </>
               )}
+
+              {/* Role & Company */}
+              <div className="group relative">
+                {isEditing ? (
+                  <div className="flex gap-2">
+                    <input
+                      name="role"
+                      value={editedProfile.role}
+                      onChange={handleInputChange}
+                      placeholder="Role"
+                      className="flex-1 bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                    <span className="text-gray-500">@</span>
+                    <input
+                      name="company"
+                      value={editedProfile.company}
+                      onChange={handleInputChange}
+                      placeholder="Company"
+                      className="flex-1 bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-gray-700">
+                    {editedProfile.role}
+                    {editedProfile.role && editedProfile.company ? ' @ ' : ''}
+                    {editedProfile.company}
+                  </div>
+                )}
+                {isEditing && (
+                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                )}
+              </div>
+
               {/* Bio */}
-              {!isEditing && (
-                <div className="mt-2 relative">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-900 rounded-full"></div>
-                  <div className="pl-4">
+              <div className="mt-4 relative">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-900 rounded-full"></div>
+                <div className="pl-4">
+                  {isEditing ? (
+                    <textarea
+                      name="bio"
+                      value={editedProfile.bio || ''}
+                      onChange={handleInputChange}
+                      placeholder="Add a short bio"
+                      className="w-full bg-gray-50 italic text-gray-700 border-2 border-blue-200 focus:border-blue-900 focus:outline-none rounded p-4"
+                      rows={4}
+                      maxLength={300}
+                    />
+                  ) : (
                     <div className="bg-gray-50 italic text-gray-700 p-4 rounded">
                       {editedProfile.bio || 'No bio provided'}
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Save/Cancel buttons sticky at bottom in edit mode */}
