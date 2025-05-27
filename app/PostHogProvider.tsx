@@ -26,7 +26,6 @@ export default function PostHogProvider({ children }: { children: React.ReactNod
     if (user) {
       posthog.identify(user.id, {
         email: user.email,
-        name: user.name,
       })
     }
   }, [user])
