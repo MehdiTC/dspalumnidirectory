@@ -1,13 +1,8 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Suspense } from 'react';
 
-function NotFoundContent() {
-  const searchParams = useSearchParams();
-  const from = searchParams.get('from');
-
+export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 text-center">
@@ -16,7 +11,7 @@ function NotFoundContent() {
             Page Not Found
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            {from ? `The page "${from}" could not be found.` : 'The page you are looking for does not exist.'}
+            The page you are looking for does not exist.
           </p>
         </div>
         <div>
@@ -29,20 +24,5 @@ function NotFoundContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function NotFound() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#012169] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    }>
-      <NotFoundContent />
-    </Suspense>
   );
 } 
