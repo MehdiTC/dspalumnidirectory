@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import dspLogo2 from '@/public/dspLogo2.png';
 import { useUser } from '@supabase/auth-helpers-react';
 import type { Profile } from './ProfileModal';
+import posthog from '../lib/posthog';
 
 const steps = [
   'welcome',
@@ -486,6 +487,7 @@ export default function JoinFlow({ onComplete, onClose, initialProfile }: JoinFl
       console.log('Profile updated successfully');
       setStepIdx(steps.length - 1);
       if (onComplete) onComplete();
+      posthog.capture('joined_directory', { user_id: session.user.id, email: form.email });
     } catch (err: any) {
       console.error('Profile update error:', err);
       setErrors({ 

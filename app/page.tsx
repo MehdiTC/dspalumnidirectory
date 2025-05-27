@@ -6,6 +6,7 @@ import React from 'react'
 import ProfileModal, { Profile } from '../components/ProfileModal'
 import JoinFlow from '../components/JoinFlow'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
+import posthog from '../lib/posthog'
 
 type MemberProfile = {
   name: string
@@ -238,6 +239,14 @@ export default function Home() {
     });
     return filtered;
   }, [search, spheres, locations, sortChron, profiles]);
+
+  // Track search/filter usage
+  useEffect(() => {
+    if (search || spheres.length > 0 || locations.length > 0) {
+      posthog.capture('used_search', { search, spheres, locations });
+    }
+  }, [search, spheres, locations]);
+
   // Dropdown options
   const sphereOptions = useMemo(() => getUniqueOptions(profiles as MemberProfile[], 'sphere').flat().filter(Boolean), [profiles]);
   const locationOptions = useMemo(() => getUniqueOptions(profiles as MemberProfile[], 'location'), [profiles]);
@@ -470,8 +479,9 @@ export default function Home() {
                       <div className="flex-shrink-0">
                         <Link
                           href={member.linkedinUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => posthog.capture('clicked_linkedin', { user_id: member.user_id, url: member.linkedinUrl })}
                           className="text-gray-400 hover:text-[#012169]"
                         >
                           <svg 

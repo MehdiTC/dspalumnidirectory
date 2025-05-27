@@ -6,6 +6,10 @@ if (typeof window !== 'undefined' && !posthog.__loaded) {
     {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
       capture_pageview: false, // We'll capture manually
+      session_recording: {
+        recordCanvas: true,
+        maskAllInputs: false,
+      },
     }
   )
 }
