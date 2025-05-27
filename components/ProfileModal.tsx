@@ -6,6 +6,7 @@ import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '@/lib/cropImage';
 import { cn } from '@/lib/utils';
+import { FaLinkedin } from 'react-icons/fa';
 
 export type Profile = {
   id?: string;
@@ -234,6 +235,18 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
         exit={{ scale: 0.95, opacity: 0 }}
         className="relative bg-white max-w-2xl w-full rounded-lg shadow-xl p-10 overflow-y-auto max-h-[90vh]"
       >
+        {/* LinkedIn logo in top right when not editing */}
+        {!isEditing && editedProfile?.linkedinUrl && (
+          <a
+            href={editedProfile.linkedinUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute top-4 right-16 text-[#012169] hover:text-blue-700"
+            aria-label="LinkedIn profile"
+          >
+            <FaLinkedin size={28} />
+          </a>
+        )}
         <button
           onClick={onClose}
           aria-label="Close"
@@ -256,18 +269,29 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 />
               ) : (
                 <div className="w-32 h-32 rounded-full bg-[#012169] flex items-center justify-center text-white text-4xl font-bold shadow">
-                  {getInitials(editedProfile.name)}
-                </div>
-              )}
-              {isEditing && (
-                <div
-                  onClick={handleProfilePicClick}
-                  className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                >
-                  <span className="text-white text-sm font-medium">Change Photo</span>
+                  {getInitials(editedProfile?.name || '')}
                 </div>
               )}
             </div>
+            {/* Show photo buttons only in edit mode */}
+            {isEditing && (
+              <div className="flex flex-col gap-2 w-full mt-2">
+                <button
+                  type="button"
+                  onClick={handleProfilePicClick}
+                  className="w-full py-2 bg-[#012169] text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition text-lg"
+                >
+                  Change Photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCropper(true)}
+                  className="w-full py-2 border-2 border-[#012169] text-[#012169] rounded-lg font-semibold hover:bg-blue-50 transition text-lg"
+                >
+                  Edit Crop
+                </button>
+              </div>
+            )}
             <input
               type="file"
               accept="image/*"
@@ -337,9 +361,24 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 )}
               </div>
 
-              {/* Graduation Year */}
-              <div className="group relative">
-                {isEditing ? (
+              {/* Graduation Year, Cohort, Location (display mode) */}
+              {!isEditing && (
+                <>
+                  <div className="text-gray-500 text-sm">
+                    {editedProfile.graduationYear && (
+                      <span>Class of {editedProfile.graduationYear}</span>
+                    )}
+                    {editedProfile.graduationYear && editedProfile.pledgeClass && <span> • </span>}
+                    {editedProfile.pledgeClass && <span>{editedProfile.pledgeClass}</span>}
+                  </div>
+                  {editedProfile.location && (
+                    <div className="text-gray-500 text-sm">{editedProfile.location}</div>
+                  )}
+                </>
+              )}
+              {/* Graduation Year (edit mode) */}
+              {isEditing && (
+                <div className="group relative">
                   <div className="flex items-center">
                     <span className="text-gray-500 mr-2">Class of</span>
                     <input
@@ -351,18 +390,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                       className="w-20 bg-transparent border-b-2 border-[#012169] focus:outline-none text-lg"
                     />
                   </div>
-                ) : (
-                  <span className="text-gray-500">Class of {editedProfile.graduationYear}</span>
-                )}
-                {isEditing && (
-                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                )}
-              </div>
-
-              {/* Cohort */}
-              <div className="group relative">
-                {isEditing ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-2">
                     <select
                       value={pledgeSemester || ''}
                       onChange={e => handleCohortChange(e.target.value, pledgeYear || '')}
@@ -380,30 +408,15 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                       className="w-8 bg-transparent border-b-2 border-[#012169] focus:outline-none text-lg"
                     />
                   </div>
-                ) : (
-                  <span>{editedProfile.pledgeClass}</span>
-                )}
-                {isEditing && (
-                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                )}
-              </div>
-
-              {/* Location */}
-              <div className="group relative">
-                {isEditing ? (
                   <input
                     name="location"
                     value={editedProfile.location}
                     onChange={handleInputChange}
-                    className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none mt-2"
+                    placeholder="Location"
                   />
-                ) : (
-                  <div className="text-gray-500">{editedProfile.location}</div>
-                )}
-                {isEditing && (
-                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Academic Info */}
               <div className="space-y-2">
@@ -433,7 +446,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 {/* Spheres */}
                 <div className="group relative">
                   {isEditing ? (
-                    <div className="flex gap-2 mt-2">
+                    <div className="flex gap-2 my-2">
                       {sphereOptions.map(s => (
                         <button
                           key={s}
