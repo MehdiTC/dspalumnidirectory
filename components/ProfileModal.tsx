@@ -312,63 +312,22 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
           {/* Main Info */}
           <div className="flex-1 min-w-0">
             <div className="space-y-4">
-              {/* Name and LinkedIn logo row */}
-              {!isEditing && (
-                <div className="flex items-center justify-between mb-1">
+              {/* Name */}
+              <div className="group relative">
+                {isEditing ? (
+                  <input
+                    name="name"
+                    value={editedProfile.name}
+                    onChange={handleInputChange}
+                    className="w-full text-2xl font-bold text-[#012169] bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                  />
+                ) : (
                   <h2 className="text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
-                  {editedProfile.linkedinUrl && (
-                    <a
-                      href={editedProfile.linkedinUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-2 text-[#012169] hover:text-blue-700"
-                      aria-label="LinkedIn profile"
-                    >
-                      <FaLinkedin size={30} />
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {/* Graduation Year, Cohort, Location (display mode) */}
-              {!isEditing && (
-                <>
-                  <div className="text-gray-500 text-sm mb-1">
-                    {editedProfile.graduationYear && (
-                      <span>Class of {editedProfile.graduationYear}</span>
-                    )}
-                    {editedProfile.graduationYear && editedProfile.pledgeClass && <span> • </span>}
-                    {editedProfile.pledgeClass && <span>{editedProfile.pledgeClass}</span>}
-                  </div>
-                  {editedProfile.location && (
-                    <div className="text-gray-500 text-sm mb-4">{editedProfile.location}</div>
-                  )}
-                </>
-              )}
-
-              {/* Major, Spheres, Email (view mode) */}
-              {!isEditing && (
-                <>
-                  {editedProfile.major && (
-                    <div className="flex items-center text-gray-700 mb-2">
-                      <span className="font-semibold w-20">Major:</span>
-                      <span>{editedProfile.major}</span>
-                    </div>
-                  )}
-                  {editedProfile.sphere && editedProfile.sphere.length > 0 && (
-                    <div className="flex items-center text-gray-700 mb-2">
-                      <span className="font-semibold w-20">Spheres:</span>
-                      <span className="text-[#012169] font-medium">{editedProfile.sphere.join(', ')}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center text-gray-700 mb-2">
-                    <span className="font-semibold w-20">Email:</span>
-                    <a href={`mailto:${editedProfile.email}`} className="underline hover:text-indigo-700 break-all">
-                      {editedProfile.email}
-                    </a>
-                  </div>
-                </>
-              )}
+                )}
+                {isEditing && (
+                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                )}
+              </div>
 
               {/* Role & Company */}
               <div className="group relative">
@@ -400,6 +359,187 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 {isEditing && (
                   <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
                 )}
+              </div>
+
+              {/* Graduation Year, Cohort, Location (display mode) */}
+              {!isEditing && (
+                <>
+                  <div className="text-gray-500 text-sm">
+                    {editedProfile.graduationYear && (
+                      <span>Class of {editedProfile.graduationYear}</span>
+                    )}
+                    {editedProfile.graduationYear && editedProfile.pledgeClass && <span> • </span>}
+                    {editedProfile.pledgeClass && <span>{editedProfile.pledgeClass}</span>}
+                  </div>
+                  {editedProfile.location && (
+                    <div className="text-gray-500 text-sm">{editedProfile.location}</div>
+                  )}
+                </>
+              )}
+              {/* Graduation Year, Cohort, Location (edit mode) */}
+              {isEditing && (
+                <div className="w-full">
+                  {/* Graduation Year */}
+                  <div className="flex flex-col w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <span className="text-gray-500 mr-2 text-base">Class of</span>
+                      <input
+                        name="graduationYear"
+                        value={editedProfile.graduationYear || ''}
+                        onChange={handleGradYearChange}
+                        placeholder="2028"
+                        maxLength={4}
+                        className="flex-1 bg-transparent text-base border-none focus:outline-none"
+                      />
+                    </div>
+                    <div className="border-b-2 border-[#012169] w-full" />
+                  </div>
+                  {/* Cohort */}
+                  <div className="flex flex-col w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <select
+                        value={pledgeSemester || ''}
+                        onChange={e => handleCohortChange(e.target.value, pledgeYear || '')}
+                        className="bg-transparent text-base border-none focus:outline-none appearance-none pr-4"
+                        style={{ minWidth: 80 }}
+                      >
+                        <option value="Spring">Spring</option>
+                        <option value="Fall">Fall</option>
+                      </select>
+                      <span className="mx-1 text-base">'</span>
+                      <input
+                        type="text"
+                        value={pledgeYear || ''}
+                        onChange={e => handleCohortChange(pledgeSemester || '', e.target.value)}
+                        maxLength={2}
+                        className="w-8 bg-transparent text-base border-none focus:outline-none"
+                      />
+                    </div>
+                    <div className="border-b-2 border-[#012169] w-full" />
+                  </div>
+                  {/* Location */}
+                  <div className="flex flex-col w-full mb-2">
+                    <input
+                      name="location"
+                      value={editedProfile.location}
+                      onChange={handleInputChange}
+                      className="w-full bg-transparent border-none text-base focus:outline-none"
+                      placeholder="Location"
+                    />
+                    <div className="border-b-2 border-[#012169] w-full" />
+                  </div>
+                </div>
+              )}
+
+              {/* Academic Info */}
+              <div className="space-y-2">
+                {/* Major */}
+                <div className="group relative">
+                  {isEditing ? (
+                    <input
+                      name="major"
+                      value={editedProfile.major || ''}
+                      onChange={handleInputChange}
+                      placeholder="Add your major"
+                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  ) : (
+                    editedProfile.major && (
+                      <div className="flex items-center text-gray-700">
+                        <span className="font-semibold w-20">Major:</span>
+                        <span>{editedProfile.major}</span>
+                      </div>
+                    )
+                  )}
+                  {isEditing && (
+                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                  )}
+                </div>
+
+                {/* Spheres */}
+                <div className="group relative">
+                  {isEditing ? (
+                    <div className="flex gap-2 my-2">
+                      {sphereOptions.map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => handleSphereToggle(s)}
+                          className={cn(
+                            'px-3 py-1 rounded-full border-2',
+                            editedProfile.sphere?.includes(s)
+                              ? 'bg-[#012169] text-white border-[#012169]'
+                              : 'bg-white text-[#012169] border-[#012169] hover:bg-blue-50'
+                          )}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    editedProfile.sphere && editedProfile.sphere.length > 0 && (
+                      <div className="flex items-center text-gray-700">
+                        <span className="font-semibold w-20">Spheres:</span>
+                        <span className="text-[#012169] font-medium">{editedProfile.sphere.join(', ')}</span>
+                      </div>
+                    )
+                  )}
+                  {isEditing && (
+                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                  )}
+                </div>
+
+                {/* Email */}
+                <div className="group relative">
+                  {isEditing ? (
+                    <input
+                      name="email"
+                      value={editedProfile.email}
+                      onChange={handleInputChange}
+                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  ) : (
+                    <div className="flex items-center text-gray-700">
+                      <span className="font-semibold w-20">Email:</span>
+                      <a href={`mailto:${editedProfile.email}`} className="underline hover:text-indigo-700 break-all">
+                        {editedProfile.email}
+                      </a>
+                    </div>
+                  )}
+                  {isEditing && (
+                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                  )}
+                </div>
+
+                {/* LinkedIn */}
+                <div className="group relative">
+                  {isEditing ? (
+                    <input
+                      name="linkedinUrl"
+                      value={editedProfile.linkedinUrl || ''}
+                      onChange={handleInputChange}
+                      placeholder="Add your LinkedIn URL"
+                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  ) : (
+                    editedProfile.linkedinUrl && (
+                      <div className="flex items-center text-gray-700">
+                        <span className="font-semibold w-20">LinkedIn:</span>
+                        <a
+                          href={editedProfile.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#012169] hover:underline"
+                        >
+                          {editedProfile.linkedinUrl.replace(/^https?:\/\/|www\.linkedin\.com\/in\//, '')}
+                        </a>
+                      </div>
+                    )
+                  )}
+                  {isEditing && (
+                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                  )}
+                </div>
               </div>
 
               {/* Bio */}
