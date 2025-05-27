@@ -279,14 +279,14 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 <button
                   type="button"
                   onClick={handleProfilePicClick}
-                  className="w-full py-2 bg-[#012169] text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition text-lg"
+                  className="w-full py-2 bg-[#012169] text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition text-base"
                 >
                   Change Photo
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCropper(true)}
-                  className="w-full py-2 border-2 border-[#012169] text-[#012169] rounded-lg font-semibold hover:bg-blue-50 transition text-lg"
+                  className="w-full py-2 border-2 border-[#012169] text-[#012169] rounded-lg font-semibold hover:bg-blue-50 transition text-base"
                 >
                   Edit Crop
                 </button>
@@ -376,45 +376,58 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                   )}
                 </>
               )}
-              {/* Graduation Year (edit mode) */}
+              {/* Graduation Year, Cohort, Location (edit mode) */}
               {isEditing && (
-                <div className="group relative">
-                  <div className="flex items-center">
-                    <span className="text-gray-500 mr-2">Class of</span>
-                    <input
-                      name="graduationYear"
-                      value={editedProfile.graduationYear || ''}
-                      onChange={handleGradYearChange}
-                      placeholder="2028"
-                      maxLength={4}
-                      className="w-20 bg-transparent border-b-2 border-[#012169] focus:outline-none text-lg"
-                    />
+                <div className="w-full">
+                  {/* Graduation Year */}
+                  <div className="flex flex-col w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <span className="text-gray-500 mr-2 text-base">Class of</span>
+                      <input
+                        name="graduationYear"
+                        value={editedProfile.graduationYear || ''}
+                        onChange={handleGradYearChange}
+                        placeholder="2028"
+                        maxLength={4}
+                        className="flex-1 bg-transparent text-base border-none focus:outline-none"
+                      />
+                    </div>
+                    <div className="border-b-2 border-[#012169] w-full" />
                   </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <select
-                      value={pledgeSemester || ''}
-                      onChange={e => handleCohortChange(e.target.value, pledgeYear || '')}
-                      className="bg-transparent border-b-2 border-[#012169] focus:outline-none text-lg"
-                    >
-                      <option value="Spring">Spring</option>
-                      <option value="Fall">Fall</option>
-                    </select>
-                    <span className="mx-1">'</span>
-                    <input
-                      type="text"
-                      value={pledgeYear || ''}
-                      onChange={e => handleCohortChange(pledgeSemester || '', e.target.value)}
-                      maxLength={2}
-                      className="w-8 bg-transparent border-b-2 border-[#012169] focus:outline-none text-lg"
-                    />
+                  {/* Cohort */}
+                  <div className="flex flex-col w-full mb-2">
+                    <div className="flex items-center w-full">
+                      <select
+                        value={pledgeSemester || ''}
+                        onChange={e => handleCohortChange(e.target.value, pledgeYear || '')}
+                        className="bg-transparent text-base border-none focus:outline-none appearance-none pr-4"
+                        style={{ minWidth: 80 }}
+                      >
+                        <option value="Spring">Spring</option>
+                        <option value="Fall">Fall</option>
+                      </select>
+                      <span className="mx-1 text-base">'</span>
+                      <input
+                        type="text"
+                        value={pledgeYear || ''}
+                        onChange={e => handleCohortChange(pledgeSemester || '', e.target.value)}
+                        maxLength={2}
+                        className="w-8 bg-transparent text-base border-none focus:outline-none"
+                      />
+                    </div>
+                    <div className="border-b-2 border-[#012169] w-full" />
                   </div>
-                  <input
-                    name="location"
-                    value={editedProfile.location}
-                    onChange={handleInputChange}
-                    className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none mt-2"
-                    placeholder="Location"
-                  />
+                  {/* Location */}
+                  <div className="flex flex-col w-full mb-2">
+                    <input
+                      name="location"
+                      value={editedProfile.location}
+                      onChange={handleInputChange}
+                      className="w-full bg-transparent border-none text-base focus:outline-none"
+                      placeholder="Location"
+                    />
+                    <div className="border-b-2 border-[#012169] w-full" />
+                  </div>
                 </div>
               )}
 
