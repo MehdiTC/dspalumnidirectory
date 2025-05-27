@@ -976,17 +976,30 @@ export default function JoinFlow({ onComplete, onClose, initialProfile }: JoinFl
           </div>
         </div>
         <div className="mt-2">{renderStep()}</div>
-        {/* Next button for all steps except welcome and confirm */}
-        {step !== 'welcome' && step !== 'confirm' && (
-          <div className="flex justify-end mt-8">
+        {/* Bottom buttons */}
+        <div className="flex justify-between mt-8">
+          {step !== 'welcome' && step !== 'confirm' && (
             <button
               className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition text-lg"
               onClick={next}
             >
               Next
             </button>
-          </div>
-        )}
+          )}
+          {initialProfile && step !== 'welcome' && step !== 'confirm' && (
+            <button
+              className={cn(
+                'px-6 py-3 bg-green-600 text-white rounded-lg font-semibold shadow hover:bg-green-700 transition text-lg',
+                submitting && 'opacity-60 cursor-not-allowed'
+              )}
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? 'Saving...' : 'Save Changes'}
+            </button>
+          )}
+        </div>
+        {errors.submit && <p className="text-red-500 mt-2 text-center">{errors.submit}</p>}
       </motion.div>
     </div>
   );
