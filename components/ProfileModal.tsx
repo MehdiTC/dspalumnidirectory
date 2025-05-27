@@ -279,14 +279,14 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 <button
                   type="button"
                   onClick={handleProfilePicClick}
-                  className="w-full py-1 bg-[#012169] text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition text-sm"
+                  className="w-full py-2 bg-[#012169] text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition text-lg"
                 >
                   Change Photo
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCropper(true)}
-                  className="w-full py-1 border-2 border-blue-200 text-[#012169] rounded-lg font-semibold hover:bg-blue-50 transition text-sm"
+                  className="w-full py-2 border-2 border-[#012169] text-[#012169] rounded-lg font-semibold hover:bg-blue-50 transition text-lg"
                 >
                   Edit Crop
                 </button>
@@ -364,57 +364,55 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
               {/* Graduation Year, Cohort, Location (display mode) */}
               {!isEditing && (
                 <>
-                  <div className="text-blue-200 border-b border-blue-200 pb-1 mb-1">
-                    <div className="text-xs text-gray-500 font-normal">
-                      {editedProfile.graduationYear && (
-                        <span>Class of {editedProfile.graduationYear}</span>
-                      )}
-                      {editedProfile.graduationYear && editedProfile.pledgeClass && <span> • </span>}
-                      {editedProfile.pledgeClass && <span>{editedProfile.pledgeClass}</span>}
-                    </div>
-                    {editedProfile.location && (
-                      <div className="text-xs text-gray-500 font-normal mt-0.5">{editedProfile.location}</div>
+                  <div className="text-gray-500 text-sm">
+                    {editedProfile.graduationYear && (
+                      <span>Class of {editedProfile.graduationYear}</span>
                     )}
+                    {editedProfile.graduationYear && editedProfile.pledgeClass && <span> • </span>}
+                    {editedProfile.pledgeClass && <span>{editedProfile.pledgeClass}</span>}
                   </div>
+                  {editedProfile.location && (
+                    <div className="text-gray-500 text-sm">{editedProfile.location}</div>
+                  )}
                 </>
               )}
               {/* Graduation Year (edit mode) */}
               {isEditing && (
-                <div className="group relative border-b border-blue-200 pb-2 mb-2">
+                <div className="group relative">
                   <div className="flex items-center">
-                    <span className="text-gray-500 mr-2 text-xs">Class of</span>
+                    <span className="text-gray-500 mr-2">Class of</span>
                     <input
                       name="graduationYear"
                       value={editedProfile.graduationYear || ''}
                       onChange={handleGradYearChange}
                       placeholder="2028"
                       maxLength={4}
-                      className="w-20 bg-transparent border-b-2 border-blue-200 focus:outline-none text-xs"
+                      className="w-20 bg-transparent border-b-2 border-[#012169] focus:outline-none text-lg"
                     />
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <select
                       value={pledgeSemester || ''}
                       onChange={e => handleCohortChange(e.target.value, pledgeYear || '')}
-                      className="bg-transparent border-b-2 border-blue-200 focus:outline-none text-xs"
+                      className="bg-transparent border-b-2 border-[#012169] focus:outline-none text-lg"
                     >
                       <option value="Spring">Spring</option>
                       <option value="Fall">Fall</option>
                     </select>
-                    <span className="mx-1 text-xs">'</span>
+                    <span className="mx-1">'</span>
                     <input
                       type="text"
                       value={pledgeYear || ''}
                       onChange={e => handleCohortChange(pledgeSemester || '', e.target.value)}
                       maxLength={2}
-                      className="w-8 bg-transparent border-b-2 border-blue-200 focus:outline-none text-xs"
+                      className="w-8 bg-transparent border-b-2 border-[#012169] focus:outline-none text-lg"
                     />
                   </div>
                   <input
                     name="location"
                     value={editedProfile.location}
                     onChange={handleInputChange}
-                    className="w-full bg-transparent border-b-2 border-blue-200 focus:outline-none mt-2 text-xs"
+                    className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none mt-2"
                     placeholder="Location"
                   />
                 </div>
@@ -455,10 +453,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                           type="button"
                           onClick={() => handleSphereToggle(s)}
                           className={cn(
-                            'px-3 py-1 rounded-full border-2 text-xs',
+                            'px-3 py-1 rounded-full border-2',
                             editedProfile.sphere?.includes(s)
-                              ? 'bg-[#012169] text-white border-blue-200'
-                              : 'bg-white text-[#012169] border-blue-200 hover:bg-blue-50'
+                              ? 'bg-[#012169] text-white border-[#012169]'
+                              : 'bg-white text-[#012169] border-[#012169] hover:bg-blue-50'
                           )}
                         >
                           {s}
@@ -554,9 +552,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
               </div>
             </div>
 
-            {/* Save/Cancel buttons */}
-            {isEditing && (
-              <div className="flex justify-end gap-4 mt-8">
+            {/* Save/Cancel buttons sticky at bottom in edit mode */}
+            {isEditing && hasChanges && (
+              <div className="sticky bottom-0 left-0 right-0 bg-white pt-6 pb-2 flex justify-end gap-4 z-10 border-t border-gray-200 mt-8">
                 <button
                   onClick={handleSave}
                   disabled={isSubmitting}
