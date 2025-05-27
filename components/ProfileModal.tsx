@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSession } from '@supabase/auth-helpers-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiEdit2 } from 'react-icons/fi';
-import { FaCamera, FaLinkedin } from 'react-icons/fa';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '@/lib/cropImage';
 import { cn } from '@/lib/utils';
@@ -32,22 +32,30 @@ type ProfileModalProps = {
   onEdit: () => void;
 };
 
-const sphereOptions = ['Finance', 'Consulting', 'Tech', 'Other'];
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onEdit }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<Profile | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
-  const [profilePic, setProfilePic] = useState<File | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
+  const [newProfilePic, setNewProfilePic] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const session = useSession();
-  const isOwner = session?.user?.id === profile?.user_id;
-  const [editingField, setEditingField] = useState<string | null>(null);
+  const supabase = useSupabaseClient();
 
   useEffect(() => {
     if (profile) {
@@ -55,20 +63,19 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
     }
   }, [profile]);
 
+  useEffect(() => {
+    if (!open) {
+      setIsEditing(false);
+      setHasChanges(false);
+      setError(null);
+    }
+  }, [open]);
+
   function handleOverlayClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === overlayRef.current) onClose();
   }
 
-  function getInitials(name: string) {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
-
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
     setEditedProfile(prev => {
       if (!prev) return null;
@@ -78,33 +85,20 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
     });
   }
 
-  function handleSphereChange(sphere: string) {
-    setEditedProfile(prev => {
-      if (!prev) return null;
-      const newSpheres = prev.sphere?.includes(sphere)
-        ? prev.sphere.filter(s => s !== sphere)
-        : [...(prev.sphere || []), sphere];
-      setHasChanges(true);
-      return { ...prev, sphere: newSpheres };
-    });
+  function handleProfilePicClick() {
+    fileInputRef.current?.click();
   }
 
-  function handlePledgeClassChange(semester: string, year: string) {
-    setEditedProfile(prev => {
-      if (!prev) return null;
-      setHasChanges(true);
-      return { ...prev, pledgeClass: `${semester} '${year}` };
-    });
-  }
-
-  function handleProfilePic(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     if (!file.type.startsWith('image/')) {
-      alert('File must be an image');
+      setError('File must be an image');
       return;
     }
-    setProfilePic(file);
+    
+    setNewProfilePic(file);
     setShowCropper(true);
   }
 
@@ -113,38 +107,82 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
   }
 
   async function handleCropSave() {
-    if (!profilePic || !croppedAreaPixels) return;
-    const cropped = await getCroppedImg(profilePic, croppedAreaPixels);
-    setEditedProfile(prev => {
-      if (!prev) return null;
+    if (!newProfilePic || !croppedAreaPixels) return;
+    
+    try {
+      const cropped = await getCroppedImg(newProfilePic, croppedAreaPixels);
+      setEditedProfile(prev => {
+        if (!prev) return null;
+        return { ...prev, profile_picture_url: cropped };
+      });
       setHasChanges(true);
-      return { ...prev, profile_picture_url: cropped };
-    });
-    setShowCropper(false);
+      setShowCropper(false);
+    } catch (err) {
+      setError('Failed to crop image');
+    }
   }
 
   async function handleSave() {
-    // TODO: Implement save functionality
-    setIsEditing(false);
-    setHasChanges(false);
+    if (!editedProfile || !session?.user) return;
+    
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      // Upload new profile picture if changed
+      let profile_picture_url = editedProfile.profile_picture_url;
+      if (editedProfile.profile_picture_url?.startsWith('data:image/')) {
+        const fileExt = 'jpg';
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${session.user.id}/${fileName}`;
+        
+        const blob = dataURLtoBlob(editedProfile.profile_picture_url);
+        const { error: uploadError } = await supabase.storage
+          .from('profile-pictures')
+          .upload(filePath, blob, {
+            cacheControl: '3600',
+            upsert: true,
+          });
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('profile-pictures')
+          .getPublicUrl(filePath);
+          
+        profile_picture_url = publicUrl;
+      }
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          ...editedProfile,
+          profile_picture_url,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', session.user.id);
+
+      if (updateError) throw updateError;
+
+      setIsEditing(false);
+      setHasChanges(false);
+      onEdit(); // Refresh profile data
+    } catch (err: any) {
+      setError(err.message || 'Failed to update profile');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleCancel() {
     setEditedProfile(profile);
     setIsEditing(false);
     setHasChanges(false);
-  }
-
-  function startEdit(field: string) {
-    setEditingField(field);
-  }
-  function stopEdit() {
-    setEditingField(null);
+    setError(null);
   }
 
   if (!profile || !editedProfile) return null;
-
-  const [pledgeSemester, pledgeYear] = profile.pledgeClass.split(" '");
 
   return (
     <div
@@ -170,11 +208,12 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+
         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-          {/* Profile Picture Section */}
+          {/* Profile Picture */}
           <div className="flex-shrink-0 flex flex-col items-center gap-4">
             <div className="relative group">
-              {editedProfile.profile_picture_url ? (
+              {editedProfile?.profile_picture_url ? (
                 <img
                   src={editedProfile.profile_picture_url}
                   alt={editedProfile.name}
@@ -185,266 +224,308 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                   {getInitials(editedProfile.name)}
                 </div>
               )}
+              {isEditing && (
+                <div
+                  onClick={handleProfilePicClick}
+                  className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <span className="text-white text-sm font-medium">Change Photo</span>
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-36 py-2 bg-[#012169] text-white rounded-lg font-semibold shadow hover:bg-blue-800 transition text-lg mt-2"
-            >
-              Change Photo
-            </button>
-            <button
-              onClick={() => setShowCropper(true)}
-              className="w-36 py-2 border-2 border-[#012169] text-[#012169] rounded-lg font-semibold hover:bg-blue-50 transition text-lg"
-            >
-              Edit Crop
-            </button>
             <input
               type="file"
               accept="image/*"
               className="hidden"
               ref={fileInputRef}
-              onChange={handleProfilePic}
+              onChange={handleFileChange}
             />
+            {session?.user?.id === profile.user_id && !isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-4 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition"
+              >
+                Edit Profile
+              </button>
+            )}
           </div>
+
           {/* Main Info */}
           <div className="flex-1 min-w-0">
-            {/* Name */}
-            <div className="flex items-center border-b-2 border-[#012169] mb-2">
-              {editingField === 'name' ? (
-                <input
-                  name="name"
-                  value={editedProfile.name}
-                  onChange={handleInputChange}
-                  onBlur={stopEdit}
-                  className="flex-1 text-2xl font-bold text-blue-900 bg-transparent focus:outline-none"
-                  autoFocus
-                />
-              ) : (
-                <span className="flex-1 text-2xl font-bold text-blue-900">{editedProfile.name}</span>
-              )}
-              <button onClick={() => startEdit('name')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
-            </div>
-            {/* Role & Company */}
-            <div className="flex items-center border-b-2 border-[#012169] mb-2">
-              {editingField === 'role' ? (
-                <input
-                  name="role"
-                  value={editedProfile.role}
-                  onChange={handleInputChange}
-                  onBlur={stopEdit}
-                  className="flex-1 bg-transparent focus:outline-none"
-                  autoFocus
-                />
-              ) : (
-                <span className="flex-1">{editedProfile.role}</span>
-              )}
-              <span className="mx-2">@</span>
-              {editingField === 'company' ? (
-                <input
-                  name="company"
-                  value={editedProfile.company}
-                  onChange={handleInputChange}
-                  onBlur={stopEdit}
-                  className="flex-1 bg-transparent focus:outline-none"
-                  autoFocus
-                />
-              ) : (
-                <span className="flex-1">{editedProfile.company}</span>
-              )}
-              <button onClick={() => startEdit('role')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
-              <button onClick={() => startEdit('company')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
-            </div>
-            {/* Graduation Year */}
-            <div className="flex items-center border-b-2 border-[#012169] mb-2">
-              {editingField === 'graduationYear' ? (
-                <input
-                  name="graduationYear"
-                  value={editedProfile.graduationYear || ''}
-                  onChange={handleInputChange}
-                  onBlur={stopEdit}
-                  className="flex-1 bg-transparent focus:outline-none"
-                  autoFocus
-                />
-              ) : (
-                <span className="flex-1">{editedProfile.graduationYear}</span>
-              )}
-              <button onClick={() => startEdit('graduationYear')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
-            </div>
-            {/* Cohort */}
-            <div className="flex items-center border-b-2 border-[#012169] mb-2">
-              {editingField === 'pledgeClass' ? (
-                <>
-                  <select
-                    value={pledgeSemester}
-                    onChange={e => handlePledgeClassChange(e.target.value, pledgeYear)}
-                    className="bg-transparent focus:outline-none"
-                  >
-                    <option value="Spring">Spring</option>
-                    <option value="Fall">Fall</option>
-                  </select>
-                  <span className="mx-1">'</span>
+            <div className="space-y-4">
+              {/* Name */}
+              <div className="group relative">
+                {isEditing ? (
                   <input
-                    type="text"
-                    value={pledgeYear}
-                    onChange={e => handlePledgeClassChange(pledgeSemester, e.target.value)}
-                    maxLength={2}
-                    className="w-8 bg-transparent focus:outline-none"
-                    autoFocus
+                    name="name"
+                    value={editedProfile.name}
+                    onChange={handleInputChange}
+                    className="w-full text-2xl font-bold text-[#012169] bg-transparent border-b-2 border-[#012169] focus:outline-none"
                   />
-                </>
-              ) : (
-                <span>{editedProfile.pledgeClass}</span>
-              )}
-              <button onClick={() => startEdit('pledgeClass')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
-            </div>
-            {/* Location */}
-            <div className="flex items-center border-b-2 border-[#012169] mb-2">
-              {editingField === 'location' ? (
-                <input
-                  name="location"
-                  value={editedProfile.location}
-                  onChange={handleInputChange}
-                  onBlur={stopEdit}
-                  className="flex-1 bg-transparent focus:outline-none"
-                  autoFocus
-                />
-              ) : (
-                <span className="flex-1">{editedProfile.location}</span>
-              )}
-              <button onClick={() => startEdit('location')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
-            </div>
-            {/* Major */}
-            <div className="flex items-center border-b-2 border-[#012169] mb-2">
-              {editingField === 'major' ? (
-                <input
-                  name="major"
-                  value={editedProfile.major || ''}
-                  onChange={handleInputChange}
-                  onBlur={stopEdit}
-                  className="flex-1 bg-transparent focus:outline-none"
-                  autoFocus
-                />
-              ) : (
-                <span className="flex-1">{editedProfile.major}</span>
-              )}
-              <button onClick={() => startEdit('major')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
-            </div>
-            {/* Sphere */}
-            <div className="flex items-center border-b-2 border-[#012169] mb-2">
-              {editingField === 'sphere' ? (
-                <div className="flex gap-2">
-                  {sphereOptions.map(s => (
-                    <button
-                      key={s}
-                      onClick={() => handleSphereChange(s)}
-                      className={cn(
-                        'px-2 py-1 rounded',
-                        editedProfile.sphere?.includes(s)
-                          ? 'bg-blue-900 text-white'
-                          : 'bg-gray-100 text-blue-900 hover:bg-blue-200'
-                      )}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                ) : (
+                  <h2 className="text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
+                )}
+                {isEditing && (
+                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                )}
+              </div>
+
+              {/* Role & Company */}
+              <div className="group relative">
+                {isEditing ? (
+                  <div className="flex gap-2">
+                    <input
+                      name="role"
+                      value={editedProfile.role}
+                      onChange={handleInputChange}
+                      placeholder="Role"
+                      className="flex-1 bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                    <span className="text-gray-500">@</span>
+                    <input
+                      name="company"
+                      value={editedProfile.company}
+                      onChange={handleInputChange}
+                      placeholder="Company"
+                      className="flex-1 bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-gray-700">
+                    {editedProfile.role}
+                    {editedProfile.role && editedProfile.company ? ' @ ' : ''}
+                    {editedProfile.company}
+                  </div>
+                )}
+                {isEditing && (
+                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                )}
+              </div>
+
+              {/* Pledge Class & Grad Year */}
+              <div className="text-gray-500 text-sm">
+                {editedProfile.graduationYear && (
+                  <span>Class of {editedProfile.graduationYear}</span>
+                )}
+                {editedProfile.graduationYear && editedProfile.pledgeClass && <span> • </span>}
+                {editedProfile.pledgeClass && <span>{editedProfile.pledgeClass}</span>}
+              </div>
+
+              {/* Location */}
+              <div className="group relative">
+                {isEditing ? (
+                  <input
+                    name="location"
+                    value={editedProfile.location}
+                    onChange={handleInputChange}
+                    className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                  />
+                ) : (
+                  <div className="text-gray-500">{editedProfile.location}</div>
+                )}
+                {isEditing && (
+                  <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                )}
+              </div>
+
+              {/* Academic Info */}
+              <div className="space-y-2">
+                {/* Major */}
+                <div className="group relative">
+                  {isEditing ? (
+                    <input
+                      name="major"
+                      value={editedProfile.major || ''}
+                      onChange={handleInputChange}
+                      placeholder="Add your major"
+                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  ) : (
+                    editedProfile.major && (
+                      <div className="flex items-center text-gray-700">
+                        <span className="font-semibold w-20">Major:</span>
+                        <span>{editedProfile.major}</span>
+                      </div>
+                    )
+                  )}
+                  {isEditing && (
+                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                  )}
                 </div>
-              ) : (
-                <span>{editedProfile.sphere?.join(', ')}</span>
-              )}
-              <button onClick={() => startEdit('sphere')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
-            </div>
-            {/* Email */}
-            <div className="flex items-center border-b-2 border-[#012169] mb-2">
-              {editingField === 'email' ? (
-                <input
-                  name="email"
-                  value={editedProfile.email}
-                  onChange={handleInputChange}
-                  onBlur={stopEdit}
-                  className="flex-1 bg-transparent focus:outline-none"
-                  autoFocus
-                />
-              ) : (
-                <span className="flex-1">{editedProfile.email}</span>
-              )}
-              <button onClick={() => startEdit('email')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
-            </div>
-            {/* LinkedIn */}
-            <div className="flex items-center border-b-2 border-[#012169] mb-2">
-              {editingField === 'linkedinUrl' ? (
-                <input
-                  name="linkedinUrl"
-                  value={editedProfile.linkedinUrl || ''}
-                  onChange={handleInputChange}
-                  onBlur={stopEdit}
-                  className="flex-1 bg-transparent focus:outline-none"
-                  autoFocus
-                />
-              ) : (
-                editedProfile.linkedinUrl && (
-                  <a href={editedProfile.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:text-blue-900">
-                    <FaLinkedin size={20} />
-                  </a>
-                )
-              )}
-              <button onClick={() => startEdit('linkedinUrl')} className="ml-2 text-[#012169]"><FiEdit2 /></button>
-            </div>
-            {/* Bio */}
-            <div className="mt-4 relative">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-900 rounded-full"></div>
-              <div className="pl-4">
-                {editingField === 'bio' ? (
+
+                {/* Minor */}
+                <div className="group relative">
+                  {isEditing ? (
+                    <input
+                      name="minor"
+                      value={editedProfile.minor || ''}
+                      onChange={handleInputChange}
+                      placeholder="Add your minor"
+                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  ) : (
+                    editedProfile.minor && (
+                      <div className="flex items-center text-gray-700">
+                        <span className="font-semibold w-20">Minor:</span>
+                        <span>{editedProfile.minor}</span>
+                      </div>
+                    )
+                  )}
+                  {isEditing && (
+                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                  )}
+                </div>
+
+                {/* Spheres */}
+                <div className="group relative">
+                  {isEditing ? (
+                    <input
+                      name="sphere"
+                      value={editedProfile.sphere?.join(', ') || ''}
+                      onChange={handleInputChange}
+                      placeholder="Add your spheres (comma-separated)"
+                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  ) : (
+                    editedProfile.sphere && editedProfile.sphere.length > 0 && (
+                      <div className="flex items-center text-gray-700">
+                        <span className="font-semibold w-20">Spheres:</span>
+                        <span className="text-[#012169] font-medium">{editedProfile.sphere.join(', ')}</span>
+                      </div>
+                    )
+                  )}
+                  {isEditing && (
+                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                  )}
+                </div>
+
+                {/* Email */}
+                <div className="group relative">
+                  {isEditing ? (
+                    <input
+                      name="email"
+                      value={editedProfile.email}
+                      onChange={handleInputChange}
+                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  ) : (
+                    <div className="flex items-center text-gray-700">
+                      <span className="font-semibold w-20">Email:</span>
+                      <a href={`mailto:${editedProfile.email}`} className="underline hover:text-indigo-700 break-all">
+                        {editedProfile.email}
+                      </a>
+                    </div>
+                  )}
+                  {isEditing && (
+                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                  )}
+                </div>
+
+                {/* LinkedIn */}
+                <div className="group relative">
+                  {isEditing ? (
+                    <input
+                      name="linkedinUrl"
+                      value={editedProfile.linkedinUrl || ''}
+                      onChange={handleInputChange}
+                      placeholder="Add your LinkedIn URL"
+                      className="w-full bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  ) : (
+                    editedProfile.linkedinUrl && (
+                      <div className="flex items-center text-gray-700">
+                        <span className="font-semibold w-20">LinkedIn:</span>
+                        <a
+                          href={editedProfile.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#012169] hover:underline"
+                        >
+                          {editedProfile.linkedinUrl.replace(/^https?:\/\/|www\.linkedin\.com\/in\//, '')}
+                        </a>
+                      </div>
+                    )
+                  )}
+                  {isEditing && (
+                    <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                  )}
+                </div>
+              </div>
+
+              {/* Bio */}
+              <div className="group relative">
+                {isEditing ? (
                   <textarea
                     name="bio"
                     value={editedProfile.bio || ''}
                     onChange={handleInputChange}
-                    onBlur={stopEdit}
-                    className="w-full bg-gray-50 italic text-gray-700 border-2 border-blue-200 focus:border-blue-900 focus:outline-none rounded p-2"
+                    placeholder="Add a short bio"
+                    className="w-full bg-transparent border-2 border-[#012169] rounded-lg p-2 focus:outline-none"
                     rows={4}
-                    maxLength={300}
-                    autoFocus
                   />
                 ) : (
-                  <div className="bg-gray-50 italic text-gray-700 p-4 rounded">
-                    {editedProfile.bio || 'No bio provided'}
-                  </div>
+                  editedProfile.bio && (
+                    <div className="text-gray-700 whitespace-pre-wrap">{editedProfile.bio}</div>
+                  )
                 )}
-                <button onClick={() => startEdit('bio')} className="absolute top-2 right-2 text-[#012169]"><FiEdit2 /></button>
+                {isEditing && (
+                  <FiEdit2 className="absolute right-0 top-0 text-gray-400 group-hover:text-[#012169] transition-colors" />
+                )}
               </div>
             </div>
-            {/* Save/Cancel Buttons */}
-            {hasChanges && (
-              <div className="flex justify-end gap-4 mt-6">
+
+            {/* Save/Cancel buttons */}
+            {isEditing && hasChanges && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex gap-4 mt-6"
+              >
+                <button
+                  onClick={handleSave}
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition disabled:opacity-60"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
                 <button
                   onClick={handleCancel}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md font-semibold hover:bg-gray-50 transition"
                 >
                   Cancel
                 </button>
-                <button
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition"
-                >
-                  Save Changes
-                </button>
-              </div>
+              </motion.div>
+            )}
+            {error && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-red-500 mt-4"
+              >
+                {error}
+              </motion.p>
             )}
           </div>
         </div>
 
         {/* Image Cropper Modal */}
         <AnimatePresence>
-          {showCropper && profilePic && (
+          {showCropper && newProfilePic && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+              className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
             >
-              <div className="bg-white rounded-xl p-6 shadow-lg flex flex-col items-center gap-4">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white rounded-xl p-6 shadow-lg flex flex-col items-center gap-4"
+              >
                 <div className="relative w-64 h-64 bg-gray-100 rounded-lg overflow-hidden">
                   <Cropper
-                    image={URL.createObjectURL(profilePic)}
+                    image={URL.createObjectURL(newProfilePic)}
                     crop={crop}
                     zoom={zoom}
                     aspect={1}
@@ -478,7 +559,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                     Cancel
                   </button>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -486,5 +567,16 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
     </div>
   );
 };
+
+// Helper function to convert dataURL to Blob
+function dataURLtoBlob(dataurl: string) {
+  const arr = dataurl.split(',');
+  const mime = arr[0].match(/:(.*?);/)?.[1] || '';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) u8arr[n] = bstr.charCodeAt(n);
+  return new Blob([u8arr], { type: mime });
+}
 
 export default ProfileModal; 
