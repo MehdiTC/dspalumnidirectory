@@ -565,24 +565,24 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
               </div>
             </div>
 
-            {/* Save/Cancel buttons sticky at bottom in edit mode */}
-            {isEditing && hasChanges && (
-              <div className="sticky bottom-0 left-0 right-0 bg-white pt-6 pb-2 flex justify-end gap-4 z-10 border-t border-gray-200 mt-8">
-                <button
-                  onClick={handleSave}
-                  disabled={isSubmitting}
-                  className="px-6 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition disabled:opacity-60"
-                >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
-                </button>
+            {/* Save Changes Button - always visible, bottom left on desktop, below on mobile */}
+            <div className="profile-modal-save-btn-wrapper">
+              <button
+                onClick={isEditing ? handleSave : undefined}
+                disabled={isSubmitting || !isEditing}
+                className="profile-modal-save-btn px-6 py-2 bg-[#012169] text-white rounded-md font-semibold shadow hover:bg-indigo-900 transition disabled:opacity-60"
+              >
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </button>
+              {isEditing && (
                 <button
                   onClick={handleCancel}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md font-semibold hover:bg-gray-50 transition"
+                  className="ml-4 px-6 py-2 border border-gray-300 text-gray-700 rounded-md font-semibold hover:bg-gray-50 transition"
                 >
                   Cancel
                 </button>
-              </div>
-            )}
+              )}
+            </div>
             {error && (
               <motion.p
                 initial={{ opacity: 0 }}
