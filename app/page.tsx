@@ -4,7 +4,6 @@ import Image from 'next/image'
 import { useState, useMemo, useRef, useEffect } from 'react'
 import React from 'react'
 import ProfileModal, { Profile } from '../components/ProfileModal'
-import JoinFlow from '../components/JoinFlow'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import posthog from '../lib/posthog'
 
@@ -181,7 +180,6 @@ export default function Home() {
   // Modal state
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [joinFlowOpen, setJoinFlowOpen] = useState(false);
   const [editProfile, setEditProfile] = useState<Profile | null>(null);
   const [pendingEditProfile, setPendingEditProfile] = useState<Profile | null>(null);
 
@@ -269,21 +267,6 @@ export default function Home() {
     setSelectedProfile(null);
   };
 
-  // Join Directory button handler
-  const handleJoinClick = () => {
-    if (!user) {
-      alert('Please log in to join the directory.');
-      return;
-    }
-    setJoinFlowOpen(true);
-  };
-
-  // On join flow complete, refresh directory
-  const handleJoinFlowComplete = () => {
-    setJoinFlowOpen(false);
-    fetchProfiles();
-  };
-
   // Find the logged-in user's profile
   const myProfile = useMemo(() => {
     if (!user) return null;
@@ -341,7 +324,7 @@ export default function Home() {
                   className="px-3 sm:px-5 py-2 text-sm sm:text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169] whitespace-nowrap"
                   onClick={() => setEditProfile(myProfile)}
                 >
-                  Edit Profile
+                  View Profile
                 </button>
               )}
               {user ? (
@@ -362,7 +345,7 @@ export default function Home() {
               {/* Disable Join Directory if user already has a profile */}
               <button
                 className="px-3 sm:px-5 py-2 text-sm sm:text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                onClick={handleJoinClick}
+                onClick={() => setEditProfile({} as Profile)}
                 disabled={!!myProfile}
               >
                 Join Directory
@@ -520,26 +503,27 @@ export default function Home() {
           )}
         </div>
       </section>
-      {/* Edit Profile Modal */}
-      {!modalOpen && editProfile && (
-        <JoinFlow
-          onComplete={() => {
-            setEditProfile(null);
-            fetchProfiles();
-          }}
-          onClose={() => setEditProfile(null)}
-          initialProfile={editProfile}
-        />
-      )}
-      {/* Join Directory Modal */}
-      {joinFlowOpen && (
-        <JoinFlow onComplete={handleJoinFlowComplete} onClose={() => setJoinFlowOpen(false)} />
-      )}
+      {/* View Profile Modal */}
       <ProfileModal
         open={modalOpen}
         onClose={handleModalClose}
         profile={selectedProfile}
-        onEdit={() => setEditProfile(selectedProfile)}
+        onEdit={() => {
+          fetchProfiles();
+        }}
+      />
+      {/* Edit Profile Modal */}
+      <ProfileModal
+        open={!!editProfile}
+        onClose={() => {
+          setEditProfile(null);
+          fetchProfiles();
+        }}
+        profile={editProfile}
+        onEdit={() => {
+          setEditProfile(null);
+          fetchProfiles();
+        }}
       />
     </main>
   )
