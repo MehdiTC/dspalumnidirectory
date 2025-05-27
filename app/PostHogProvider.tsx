@@ -1,10 +1,10 @@
 'use client'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import posthog from '../lib/posthog'
 import { useUser } from '@supabase/auth-helpers-react'
 
-export default function PostHogProvider({ children }: { children: React.ReactNode }) {
+function PostHogAnalytics() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const user = useUser()
@@ -30,5 +30,16 @@ export default function PostHogProvider({ children }: { children: React.ReactNod
     }
   }, [user])
 
-  return <>{children}</>
+  return null
+}
+
+export default function PostHogProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <Suspense>
+        <PostHogAnalytics />
+      </Suspense>
+      {children}
+    </>
+  )
 }
