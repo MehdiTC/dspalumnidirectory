@@ -234,26 +234,26 @@ export default function JoinWizard({ open, onClose, onSuccess }: JoinWizardProps
                   <label className="block text-sm font-semibold mb-1 text-[#012169]">Email <span className="text-[#012169]">*</span></label>
                   <input name="email" value={form.email} onChange={handleChange} placeholder="Email" type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-[#012169]">Pledge Class <span className="text-[#012169]">*</span></label>
-                    <div className="flex gap-2">
-                      <select name="pledgeClassSemester" value={form.pledgeClassSemester} onChange={handleChange} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required>
-                        <option value="">Semester</option>
-                        <option value="Spring">Spring</option>
-                        <option value="Fall">Fall</option>
-                      </select>
-                      <input name="pledgeClassYear" value={form.pledgeClassYear} onChange={handleChange} placeholder="YY" maxLength={2} className="w-16 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-[#012169]">Graduation Year <span className="text-[#012169]">*</span></label>
-                    <input name="graduationYear" value={form.graduationYear} onChange={handleChange} placeholder="YY" type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                <div>
+                  <label className="block text-sm font-semibold mb-1 text-[#012169]">Pledge Class <span className="text-[#012169]">*</span></label>
+                  <div className="flex gap-2">
+                    <select name="pledgeClassSemester" value={form.pledgeClassSemester} onChange={handleChange} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required>
+                      <option value="">Semester</option>
+                      <option value="Spring">Spring</option>
+                      <option value="Fall">Fall</option>
+                    </select>
+                    <input name="pledgeClassYear" value={form.pledgeClassYear} onChange={handleChange} placeholder="YY" maxLength={2} className="w-16 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-[#012169]">Major <span className="text-[#012169]">*</span></label>
-                  <input name="major" value={form.major} onChange={handleChange} placeholder="Major" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-[#012169]">Graduation Year <span className="text-[#012169]">*</span></label>
+                    <input name="graduationYear" value={form.graduationYear} onChange={handleChange} placeholder="YYYY" type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-[#012169]">Major <span className="text-[#012169]">*</span></label>
+                    <input name="major" value={form.major} onChange={handleChange} placeholder="Major" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1 text-[#012169]">Location <span className="text-[#012169]">*</span></label>
