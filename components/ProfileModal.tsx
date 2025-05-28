@@ -242,7 +242,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 sm:px-6"
       aria-modal="true"
       role="dialog"
       tabIndex={-1}
@@ -251,7 +251,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="relative bg-white max-w-2xl w-full rounded-lg shadow-xl p-10 overflow-y-auto max-h-[90vh]"
+        className="relative bg-white max-w-2xl w-full rounded-lg shadow-xl p-4 sm:p-10 overflow-y-auto max-h-[90vh]"
       >
         {/* LinkedIn logo in top right when not editing */}
         {!isEditing && editedProfile?.linkedinUrl && (
@@ -259,23 +259,23 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
             href={editedProfile.linkedinUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="absolute top-10 right-16 text-[#012169] hover:text-blue-700"
+            className="absolute top-4 sm:top-10 right-4 sm:right-16 text-[#012169] hover:text-blue-700"
             aria-label="LinkedIn profile"
           >
-            <FaLinkedin size={38} />
+            <FaLinkedin size={32} />
           </a>
         )}
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+          className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+        <div className="flex flex-col md:flex-row gap-6 sm:gap-8 items-center md:items-start">
           {/* Profile Picture */}
           <div className="flex-shrink-0 flex flex-col items-center gap-4">
             <div className="relative group">
@@ -283,10 +283,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 <img
                   src={editedProfile.profile_picture_url}
                   alt={editedProfile.name}
-                  className="w-32 h-32 rounded-full object-cover border-4 border-[#012169] shadow"
+                  className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-[#012169] shadow"
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full bg-[#012169] flex items-center justify-center text-white text-4xl font-bold shadow">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-[#012169] flex items-center justify-center text-white text-3xl sm:text-4xl font-bold shadow">
                   {getInitials(editedProfile?.name || '')}
                 </div>
               )}
@@ -331,16 +331,16 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
           <div className="flex-1 min-w-0">
             <div className="space-y-1">
               {/* Name */}
-              <div className="group relative mb-6">
+              <div className="group relative mb-4 sm:mb-6">
                 {isEditing ? (
                   <input
                     name="name"
                     value={editedProfile.name}
                     onChange={handleInputChange}
-                    className="w-full text-2xl font-bold text-[#012169] bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    className="w-full text-xl sm:text-2xl font-bold text-[#012169] bg-transparent border-b-2 border-[#012169] focus:outline-none"
                   />
                 ) : (
-                  <h2 className="text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
                 )}
                 {isEditing && (
                   <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
@@ -348,9 +348,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
               </div>
 
               {/* Role & Company */}
-              <div className="group relative mb-6">
+              <div className="group relative mb-4 sm:mb-6">
                 {isEditing ? (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       name="role"
                       value={editedProfile.role}
@@ -358,7 +358,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                       placeholder="Role"
                       className="flex-1 bg-transparent text-sm border-b-[1.5px] border-[#012169] focus:outline-none"
                     />
-                    <span className="text-gray-500">@</span>
+                    <span className="text-gray-500 hidden sm:inline">@</span>
                     <input
                       name="company"
                       value={editedProfile.company}
@@ -368,7 +368,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                     />
                   </div>
                 ) : (
-                  <div className="text-gray-700">
+                  <div className="text-gray-700 text-sm sm:text-base">
                     {editedProfile.role}
                     {editedProfile.role && editedProfile.company ? ' @ ' : ''}
                     {editedProfile.company}

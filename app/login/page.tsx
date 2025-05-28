@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useSupabaseClient, useSession } from '@supabase/auth-helpers-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
 export default function LoginPage() {
@@ -11,13 +11,24 @@ export default function LoginPage() {
   const supabase = useSupabaseClient();
   const session = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    // Check for error in URL params
+    const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+    if (error) {
+      setMessage({
+        type: 'error',
+        text: errorDescription || 'Authentication failed. Please try again.',
+      });
+    }
+
     // Check if user is already logged in
     if (session) {
       router.push('/');
     }
-  }, [session, router]);
+  }, [session, router, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +39,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: process.env.NODE_ENV === 'production' 
-            ? 'https://dukedsp.com/auth/callback'
-            : `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           shouldCreateUser: true,
         },
       });
@@ -39,10 +48,11 @@ export default function LoginPage() {
 
       setMessage({
         type: 'success',
-        text: 'Check your email for the login link!',
+        text: 'Check your email for the login link! If you don\'t see it, please check your spam folder.',
       });
       setEmail(''); // Clear the email field after successful submission
     } catch (error: any) {
+      console.error('Login error:', error);
       setMessage({
         type: 'error',
         text: error.message || 'Something went wrong. Please try again.',

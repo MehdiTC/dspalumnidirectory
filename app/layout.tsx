@@ -1,58 +1,62 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import ClientLayout from './ClientLayout'
-import PostHogProvider from './PostHogProvider'
-import posthog from '../lib/posthog'
+'use client';
+import './globals.css';
+import { Inter } from 'next/font/google';
+import SupabaseProvider from './SupabaseProvider';
+import PostHogProvider from './PostHogProvider';
+import { useState, useEffect } from 'react';
+import PasswordGate from '../components/PasswordGate';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "Duke DSP Alumni Directory",
-  description: "Connect with Duke Data+ alumni and explore career opportunities in data science and analytics.",
-  keywords: ["Duke", "Data+", "Alumni", "Directory", "Data Science", "Analytics"],
-  authors: [{ name: "Duke Data+ Program" }],
-  openGraph: {
-    title: "Duke DSP Alumni Directory",
-    description: "Connect with Duke Data+ alumni and explore career opportunities in data science and analytics.",
-    url: "https://dukedsp.com",
-    siteName: "Duke DSP Alumni Directory",
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Duke DSP Alumni Directory",
-    description: "Connect with Duke Data+ alumni and explore career opportunities in data science and analytics.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+const inter = Inter({ subsets: ['latin'] });
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  posthog.capture('custom_event', { property: 'value' })
+}) {
+  const [isAccessGranted, setIsAccessGranted] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check if access has been granted
+    const accessGranted = sessionStorage.getItem('dsp_access_granted') === 'true';
+    setIsAccessGranted(accessGranted);
+  }, []);
+
+  // Show loading state while checking access
+  if (isAccessGranted === null) {
+    return (
+      <html lang="en">
+        <body className={inter.className}>
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#012169] mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    );
+  }
+
+  // Show password gate if access not granted
+  if (!isAccessGranted) {
+    return (
+      <html lang="en">
+        <body className={inter.className}>
+          <PasswordGate onSuccess={() => setIsAccessGranted(true)} />
+        </body>
+      </html>
+    );
+  }
+
+  // Show main app if access granted
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <PostHogProvider>
-          <ClientLayout>{children}</ClientLayout>
-        </PostHogProvider>
+      <body className={inter.className}>
+        <SupabaseProvider>
+          <PostHogProvider>
+            {children}
+          </PostHogProvider>
+        </SupabaseProvider>
       </body>
     </html>
   );

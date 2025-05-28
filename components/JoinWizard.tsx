@@ -176,10 +176,10 @@ export default function JoinWizard({ open, onClose, onSuccess }: JoinWizardProps
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-2">
-      <motion.div className="relative bg-white max-w-lg w-full rounded-2xl shadow-2xl p-8 overflow-y-auto max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 sm:px-6">
+      <motion.div className="relative bg-white max-w-lg w-full rounded-2xl shadow-2xl p-4 sm:p-8 overflow-y-auto max-h-[90vh]">
         {/* Progress Bar */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-[#012169]"
@@ -193,51 +193,58 @@ export default function JoinWizard({ open, onClose, onSuccess }: JoinWizardProps
         <AnimatePresence mode="wait">
           {step === 0 && (
             <motion.div key="welcome" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="flex flex-col items-center justify-center py-8">
-                <Image src="/dspLogo2.png" alt="DSP Logo" width={90} height={90} />
-                <h2 className="text-3xl font-extrabold mt-6 mb-2 text-center text-[#012169]">Welcome!</h2>
+              <div className="flex flex-col items-center justify-center py-6 sm:py-8">
+                <Image src="/dspLogo2.png" alt="DSP Logo" width={80} height={80} className="w-20 h-20 sm:w-24 sm:h-24" />
+                <h2 className="text-2xl sm:text-3xl font-extrabold mt-4 sm:mt-6 mb-2 text-center text-[#012169]">Welcome!</h2>
                 <div className="w-16 h-1 bg-[#012169] rounded-full mb-4" />
-                <p className="text-gray-600 text-center mb-8">Let's get you set up in the DSP Alumni Directory.<br/>This will only take a few minutes.</p>
-                <button className="px-8 py-3 bg-[#012169] text-white rounded-lg font-bold shadow hover:bg-blue-800 transition text-lg" onClick={next}>Get Started</button>
+                <p className="text-sm sm:text-base text-gray-600 text-center mb-6 sm:mb-8">Let's get you set up in the DSP Alumni Directory.<br/>This will only take a few minutes.</p>
+                <button className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-[#012169] text-white rounded-lg font-bold shadow hover:bg-blue-800 transition text-base sm:text-lg" onClick={next}>Get Started</button>
               </div>
             </motion.div>
           )}
           {step === 1 && (
             <motion.div key="basic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <h2 className="text-2xl font-bold mb-1 text-[#012169]">Basic Info</h2>
-              <div className="w-12 h-1 bg-[#012169] rounded-full mb-6" />
-              <div className="space-y-5">
+              <h2 className="text-xl sm:text-2xl font-bold mb-1 text-[#012169]">Basic Info</h2>
+              <div className="w-12 h-1 bg-[#012169] rounded-full mb-4 sm:mb-6" />
+              <div className="space-y-4 sm:space-y-5">
                 <div>
                   <label className="block text-sm font-semibold mb-1 text-[#012169]">Full Name <span className="text-[#012169]">*</span></label>
-                  <input name="name" value={form.name} onChange={handleChange} placeholder="Full Name" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                  <input name="name" value={form.name} onChange={handleChange} placeholder="Full Name" className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1 text-[#012169]">Email <span className="text-[#012169]">*</span></label>
-                  <input name="email" value={form.email} onChange={handleChange} placeholder="Email" type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                  <input name="email" value={form.email} onChange={handleChange} placeholder="Email" type="email" className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-[#012169]">Pledge Class <span className="text-[#012169]">*</span></label>
-                  <div className="flex gap-2">
-                    <select name="pledgeClassSemester" value={form.pledgeClassSemester} onChange={handleChange} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required>
-                      <option value="">Semester</option>
-                      <option value="Spring">Spring</option>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-[#012169]">Pledge Class Semester <span className="text-[#012169]">*</span></label>
+                    <select name="pledgeClassSemester" value={form.pledgeClassSemester} onChange={handleChange} className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required>
+                      <option value="">Select</option>
                       <option value="Fall">Fall</option>
+                      <option value="Spring">Spring</option>
                     </select>
-                    <input name="pledgeClassYear" value={form.pledgeClassYear} onChange={handleChange} placeholder="YY" maxLength={2} className="w-16 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-[#012169]">Pledge Class Year <span className="text-[#012169]">*</span></label>
+                    <input name="pledgeClassYear" value={form.pledgeClassYear} onChange={handleChange} placeholder="YYYY" className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1 text-[#012169]">Graduation Year <span className="text-[#012169]">*</span></label>
-                  <input name="graduationYear" value={form.graduationYear} onChange={handleChange} placeholder="Graduation Year (e.g. 2024)" type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                  <input name="graduationYear" value={form.graduationYear} onChange={handleChange} placeholder="YYYY" className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1 text-[#012169]">Major <span className="text-[#012169]">*</span></label>
-                  <input name="major" value={form.major} onChange={handleChange} placeholder="Major" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                  <input name="major" value={form.major} onChange={handleChange} placeholder="Major" className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1 text-[#012169]">Location <span className="text-[#012169]">*</span></label>
+                  <input name="location" value={form.location} onChange={handleChange} placeholder="City, State" className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
                 </div>
               </div>
-              <div className="flex justify-between mt-8">
-                <button className="text-[#012169] font-semibold hover:underline" onClick={onClose}>Cancel</button>
-                <button className="px-8 py-2 bg-[#012169] text-white rounded-lg font-bold shadow hover:bg-blue-800 transition" onClick={next}>Next</button>
+              <div className="flex justify-between mt-6 sm:mt-8">
+                <button className="text-[#012169] font-semibold hover:underline" onClick={back}>Back</button>
+                <button className="px-6 sm:px-8 py-2 bg-[#012169] text-white rounded-lg font-bold shadow hover:bg-blue-800 transition" onClick={next}>Next</button>
               </div>
               {error && <div className="text-red-600 text-sm mt-2 font-semibold">{error}</div>}
             </motion.div>
