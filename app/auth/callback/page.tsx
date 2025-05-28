@@ -17,13 +17,16 @@ export default function Callback() {
         const errorDescription = searchParams.get('error_description')
         
         if (error) {
+          console.error('Auth callback error:', error, errorDescription)
           setError(errorDescription || 'Authentication failed')
           return
         }
 
+        // Let Supabase handle the code exchange automatically
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError) {
+          console.error('Session error:', sessionError)
           setError(sessionError.message)
           return
         }
@@ -34,8 +37,8 @@ export default function Callback() {
           setError('No session found. Please try logging in again.')
         }
       } catch (err) {
-        setError('An unexpected error occurred. Please try again.')
         console.error('Auth callback error:', err)
+        setError('An unexpected error occurred. Please try again.')
       }
     }
     check()

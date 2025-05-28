@@ -7,7 +7,7 @@ import ProfileModal, { Profile } from '../components/ProfileModal'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import posthog from '../lib/posthog'
 import JoinWizard from '../components/JoinWizard'
-import { FaLinkedin } from 'react-icons/fa'
+import { useRouter } from 'next/navigation'
 
 type MemberProfile = {
   name: string
@@ -196,6 +196,8 @@ export default function Home() {
   // Join Directory state
   const [joinWizardOpen, setJoinWizardOpen] = useState(false);
 
+  const router = useRouter();
+
   // Fetch profiles from Supabase
   async function fetchProfiles() {
     setLoadingProfiles(true);
@@ -295,21 +297,21 @@ export default function Home() {
       <section className="relative h-[32vh] min-h-[340px] flex items-center border-b border-gray-100 overflow-hidden">
         {/* Background image with overlay */}
         <div className="absolute inset-0 w-full h-full">
-          <Image
+        <Image
             src="/dukeChapel.png"
             alt="Duke campus background"
             fill
             style={{ objectFit: 'cover' }}
-            priority
-          />
+          priority
+        />
           <div className="absolute inset-0 bg-[#012169]/80" aria-hidden="true" />
         </div>
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center h-full">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 sm:gap-0 mb-8">
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-full flex items-center justify-center shadow-md overflow-hidden">
-                <Image
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-md overflow-hidden">
+            <Image
                   src="/dspLogo2.png"
                   alt="Delta Sigma Pi logo"
                   width={70}
@@ -318,7 +320,7 @@ export default function Home() {
                   priority
                 />
               </div>
-              <h1 className="text-lg font-semibold text-white tracking-tight text-center sm:text-left">
+              <h1 className="text-lg font-semibold text-white tracking-tight">
                 Delta Sigma Pi — Duke University
               </h1>
             </div>
@@ -350,10 +352,16 @@ export default function Home() {
               {/* Join Directory button opens JoinWizard */}
               <button
                 className="px-3 sm:px-5 py-2 text-sm sm:text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                onClick={() => setJoinWizardOpen(true)}
+                onClick={() => {
+                  if (!user) {
+                    router.push('/login');
+                  } else {
+                    setJoinWizardOpen(true);
+                  }
+                }}
                 disabled={!!myProfile}
               >
-                Join Directory
+                {user ? 'Join Directory' : 'Sign in to Join'}
               </button>
             </div>
           </div>
@@ -424,57 +432,79 @@ export default function Home() {
           ) : errorProfiles ? (
             <div className="text-center text-red-500 py-12">{errorProfiles}</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredProfiles.map((member, index) => (
                 <div
                   key={member.id || index}
-                  className="relative group p-4 sm:p-6 hover:bg-gray-50 transition-colors border border-gray-100 cursor-pointer rounded-lg"
+                  className="relative group p-6 hover:bg-gray-50 transition-colors border border-gray-100 cursor-pointer"
                   onClick={() => handleCardClick(member)}
                   tabIndex={0}
                   role="button"
                   aria-label={`View profile for ${member.name}`}
                   onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(member); }}
                 >
-                  <div className="flex items-start space-x-3 sm:space-x-4">
+                  <div className="flex items-start space-x-4">
                     {/* Avatar */}
                     <div className="flex-shrink-0">
                       {member.profile_picture_url ? (
                         <img
                           src={member.profile_picture_url}
                           alt={member.name}
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#012169]"
+                          className="w-12 h-12 rounded-full object-cover border-2 border-[#012169]"
                         />
                       ) : (
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#012169] flex items-center justify-center text-white text-sm font-medium">
+                        <div className="w-12 h-12 rounded-full bg-[#012169] flex items-center justify-center text-white text-sm font-medium">
                           {getInitials(member.name)}
                         </div>
                       )}
                     </div>
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm sm:text-base font-medium text-gray-900 truncate">{member.name}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1 truncate">{member.role} @ {member.company}</p>
-                      <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">{member.pledgeClass}</p>
+                      <h3 className="text-base font-medium text-gray-900">{member.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{member.role} @ {member.company}</p>
+                      <p className="text-sm text-gray-500 mt-1">{member.pledgeClass}</p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {(member.sphere || []).map((s: string) => (
-                          <span key={s} className="px-1.5 sm:px-2 py-0.5 bg-[#012169]/10 text-[#012169] text-xs rounded-full font-medium">{s}</span>
+                          <span key={s} className="px-2 py-0.5 bg-[#012169]/10 text-[#012169] text-xs rounded-full font-medium">{s}</span>
                         ))}
                       </div>
                       <p className="text-xs text-gray-400 mt-1">{member.location}</p>
                     </div>
                     {/* LinkedIn Icon */}
                     {member.linkedinUrl && (
-                      <a
-                        href={member.linkedinUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[#012169] hover:text-blue-700 transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <FaLinkedin size={20} />
-                      </a>
+                      <div className="flex-shrink-0">
+                        <Link
+                          href={member.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => posthog.capture('clicked_linkedin', { user_id: member.user_id, url: member.linkedinUrl })}
+                          className="text-gray-400 hover:text-[#012169]"
+                        >
+                          <svg 
+                            className="w-5 h-5" 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                          </svg>
+                        </Link>
+                      </div>
                     )}
                   </div>
+                  {/* Edit Profile button in bottom right */}
+                  {user && member.user_id === user.id && (
+                    <button
+                      className="absolute bottom-3 right-3 px-2 py-1 text-xs font-semibold border border-[#012169] text-[#012169] bg-white rounded hover:bg-[#012169]/10 transition z-10"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setPendingEditProfile(member);
+                        setModalOpen(false);
+                      }}
+                    >
+                      Edit Profile
+                    </button>
+                  )}
                 </div>
               ))}
               {filteredProfiles.length === 0 && (
