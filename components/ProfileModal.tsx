@@ -95,6 +95,22 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
     fileInputRef.current?.click();
   }
 
+  async function handleEditCropClick() {
+    if (!editedProfile?.profile_picture_url) return;
+    
+    try {
+      // Fetch the current profile picture
+      const response = await fetch(editedProfile.profile_picture_url);
+      const blob = await response.blob();
+      const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+      
+      setNewProfilePic(file);
+      setShowCropper(true);
+    } catch (err) {
+      setError('Failed to load profile picture for editing');
+    }
+  }
+
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -287,7 +303,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowCropper(true)}
+                  onClick={handleEditCropClick}
                   className="w-full py-1.5 border-2 border-[#012169] text-[#012169] rounded-lg font-semibold hover:bg-blue-50 transition text-sm"
                 >
                   Edit Crop

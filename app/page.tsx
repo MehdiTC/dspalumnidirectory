@@ -6,6 +6,7 @@ import React from 'react'
 import ProfileModal, { Profile } from '../components/ProfileModal'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import posthog from '../lib/posthog'
+import JoinWizard from '../components/JoinWizard'
 
 type MemberProfile = {
   name: string
@@ -191,6 +192,9 @@ export default function Home() {
   const supabase = useSupabaseClient();
   const user = useUser();
 
+  // Join Directory state
+  const [joinWizardOpen, setJoinWizardOpen] = useState(false);
+
   // Fetch profiles from Supabase
   async function fetchProfiles() {
     setLoadingProfiles(true);
@@ -318,7 +322,7 @@ export default function Home() {
               </h1>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-              {/* Only show Edit Profile in header if user has a profile */}
+              {/* Only show View Profile in header if user has a profile */}
               {user && myProfile && (
                 <button
                   className="px-3 sm:px-5 py-2 text-sm sm:text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169] whitespace-nowrap"
@@ -342,10 +346,10 @@ export default function Home() {
                   Sign in
                 </Link>
               )}
-              {/* Disable Join Directory if user already has a profile */}
+              {/* Join Directory button opens JoinWizard */}
               <button
                 className="px-3 sm:px-5 py-2 text-sm sm:text-base font-bold border-2 border-[#012169] text-[#012169] bg-white rounded-md shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#012169] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                onClick={() => setEditProfile({} as Profile)}
+                onClick={() => setJoinWizardOpen(true)}
                 disabled={!!myProfile}
               >
                 Join Directory
@@ -522,6 +526,15 @@ export default function Home() {
         profile={editProfile}
         onEdit={() => {
           setEditProfile(null);
+          fetchProfiles();
+        }}
+      />
+      {/* Join Directory Modal */}
+      <JoinWizard
+        open={joinWizardOpen}
+        onClose={() => setJoinWizardOpen(false)}
+        onSuccess={() => {
+          setJoinWizardOpen(false);
           fetchProfiles();
         }}
       />
