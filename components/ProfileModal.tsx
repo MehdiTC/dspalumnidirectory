@@ -253,18 +253,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
         exit={{ scale: 0.95, opacity: 0 }}
         className="relative bg-white max-w-2xl w-full rounded-lg shadow-xl p-10 overflow-y-auto max-h-[90vh]"
       >
-        {/* LinkedIn logo in top right when not editing */}
-        {!isEditing && editedProfile?.linkedinUrl && (
-          <a
-            href={editedProfile.linkedinUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="absolute top-10 right-16 text-[#012169] hover:text-blue-700"
-            aria-label="LinkedIn profile"
-          >
-            <FaLinkedin size={38} />
-          </a>
-        )}
         <button
           onClick={onClose}
           aria-label="Close"
@@ -330,18 +318,33 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
           {/* Main Info */}
           <div className="flex-1 min-w-0">
             <div className="space-y-1">
-              {/* Name */}
+              {/* Name and LinkedIn */}
               <div className="group relative mb-6">
-                {isEditing ? (
-                  <input
-                    name="name"
-                    value={editedProfile.name}
-                    onChange={handleInputChange}
-                    className="w-full text-2xl font-bold text-[#012169] bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                  />
-                ) : (
-                  <h2 className="text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
-                )}
+                <div className="flex justify-between items-center">
+                  {isEditing ? (
+                    <input
+                      name="name"
+                      value={editedProfile.name}
+                      onChange={handleInputChange}
+                      className="w-full text-2xl font-bold text-[#012169] bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                    />
+                  ) : (
+                    <>
+                      <h2 className="text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
+                      {editedProfile.linkedinUrl && (
+                        <a
+                          href={editedProfile.linkedinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#012169] hover:text-blue-700"
+                          aria-label="LinkedIn profile"
+                        >
+                          <FaLinkedin size={24} />
+                        </a>
+                      )}
+                    </>
+                  )}
+                </div>
                 {isEditing && (
                   <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
                 )}

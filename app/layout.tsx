@@ -42,7 +42,12 @@ export default function RootLayout({
     return (
       <html lang="en">
         <body className={inter.className}>
-          <PasswordGate onSuccess={() => setIsAccessGranted(true)} />
+          <PasswordGate 
+            onSuccess={() => {
+              setIsAccessGranted(true);
+              sessionStorage.setItem('dsp_access_granted', 'true');
+            }} 
+          />
         </body>
       </html>
     );
