@@ -58,9 +58,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <SupabaseProvider>
-          <PostHogProvider>
+        <PostHogProvider>
             {children}
-          </PostHogProvider>
+        </PostHogProvider>
         </SupabaseProvider>
       </body>
     </html>

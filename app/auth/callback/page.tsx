@@ -31,9 +31,9 @@ export default function Callback() {
           return
         }
 
-        if (session) {
-          router.replace('/')
-        } else {
+      if (session) {
+        router.replace('/')
+      } else {
           setError('No session found. Please try logging in again.')
         }
       } catch (err) {

@@ -246,13 +246,13 @@ export default function JoinWizard({ open, onClose, onSuccess }: JoinWizardProps
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-[#012169]">Graduation Year <span className="text-[#012169]">*</span></label>
+                <div>
+                  <label className="block text-sm font-semibold mb-1 text-[#012169]">Graduation Year <span className="text-[#012169]">*</span></label>
                     <input name="graduationYear" value={form.graduationYear} onChange={handleChange} placeholder="YYYY" type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-[#012169]">Major <span className="text-[#012169]">*</span></label>
-                    <input name="major" value={form.major} onChange={handleChange} placeholder="Major" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1 text-[#012169]">Major <span className="text-[#012169]">*</span></label>
+                  <input name="major" value={form.major} onChange={handleChange} placeholder="Major" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#012169] focus:border-[#012169] transition" required />
                   </div>
                 </div>
                 <div>

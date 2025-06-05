@@ -39,7 +39,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: process.env.NODE_ENV === 'production'
+          emailRedirectTo: process.env.NODE_ENV === 'production' 
             ? 'https://dukedsp.com/auth/callback'
             : `${window.location.origin}/auth/callback`,
           shouldCreateUser: true,

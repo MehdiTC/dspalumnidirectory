@@ -321,16 +321,16 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
               {/* Name and LinkedIn */}
               <div className="group relative mb-6">
                 <div className="flex justify-between items-center">
-                  {isEditing ? (
-                    <input
-                      name="name"
-                      value={editedProfile.name}
-                      onChange={handleInputChange}
-                      className="w-full text-2xl font-bold text-[#012169] bg-transparent border-b-2 border-[#012169] focus:outline-none"
-                    />
-                  ) : (
+                {isEditing ? (
+                  <input
+                    name="name"
+                    value={editedProfile.name}
+                    onChange={handleInputChange}
+                    className="w-full text-2xl font-bold text-[#012169] bg-transparent border-b-2 border-[#012169] focus:outline-none"
+                  />
+                ) : (
                     <>
-                      <h2 className="text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
+                  <h2 className="text-2xl font-bold text-[#012169]">{editedProfile.name}</h2>
                       {editedProfile.linkedinUrl && (
                         <a
                           href={editedProfile.linkedinUrl}
@@ -343,7 +343,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, profile, onE
                         </a>
                       )}
                     </>
-                  )}
+                )}
                 </div>
                 {isEditing && (
                   <FiEdit2 className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-[#012169] transition-colors" />
