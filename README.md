@@ -111,7 +111,6 @@ node scripts/import_profiles.js
 
 ## 📬 Want This for Your Org?
 
-If you want a version of this alumni directory for your club, team, or university group, visit [alumna.in](https://alumna.in) or contact mehditouhami@dukedsp.com.
-
+If you want a version of this alumni directory for your club, team, or university group, visit [alumna.in](https://alumna.in) or contact mehdi.touhamic@gmail.com
 ---
 
